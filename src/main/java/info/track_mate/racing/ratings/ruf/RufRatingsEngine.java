@@ -189,23 +189,27 @@ public class RufRatingsEngine extends AbstractRatingsEngine {
     Map<Long, Set<Date>> unsuccessfulDates = new HashMap<Long, Set<Date>>();
     Map<Long, Set<Date>> allDates = new HashMap<Long, Set<Date>>();
     for (Map.Entry<Long, Map<Date, Collection<IRace>>> racesByDateForMarket : racesByDateAndMarket.entrySet()) {
+      Long marketId = racesByDateForMarket.getKey();
+
       Set<Date> marketUnsuccessfulDates = new HashSet<Date>();
-      unsuccessfulDates.put(racesByDateForMarket.getKey(), marketUnsuccessfulDates);
+      unsuccessfulDates.put(marketId, marketUnsuccessfulDates);
       Set<Date> marketAllDates = new HashSet<Date>();
-      allDates.put(racesByDateForMarket.getKey(), marketAllDates);
+      allDates.put(marketId, marketAllDates);
       for (Map.Entry<Date, Collection<IRace>> racesForDate : racesByDateForMarket.getValue().entrySet()) {
-        marketAllDates.add(racesForDate.getKey());
+        Date raceDate = racesForDate.getKey();
+
+        marketAllDates.add(raceDate);
         // This will process the x month period up to and including yesterday (if processing ratings for tomorrow).
-        Date periodEndDate = RacingHelper.getOffsetDate(racesForDate.getKey(), -2, Calendar.DATE);
+        Date periodEndDate = RacingHelper.getOffsetDate(raceDate, -2, Calendar.DATE);
         Date periodStartDate = RacingHelper.getOffsetDate(periodEndDate, -calendarModifactionQuantity, calendarModificationUnit);
 
-        Collection<IRace> periodRaces = RatingsHelper.getRacesByMarketAndPeriod(racesByDateForMarket.getKey(), periodStartDate, periodEndDate,
+        Collection<IRace> periodRaces = RatingsHelper.getRacesByMarketAndPeriod(marketId, periodStartDate, periodEndDate,
                 DefaultValueObjectDefinition.createValueObjectDefinition("*,raceType.*,track.*"), racingService);
         if (debug) {
           logger.debug("Found " + periodRaces.size() + " Races to process between " + periodStartDate + " and " + periodEndDate + ".");
         }
         // Get the runner factors and RufRatingsRaces.
-        Map<Long, Double> runnerFactors = new HashMap<Long, Double>();
+        Map<Long, Double> runnerFactors = new HashMap<Long, Double>(); //Jian: key = horseId
         Map<Long, RufRatingsRace> ratingsRaces = new HashMap<Long, RufRatingsRace>();
         getRunnerFactorsAndRatingsRaces(periodRaces, runnerFactors, ratingsRaces, racingService);
 
@@ -226,8 +230,8 @@ public class RufRatingsEngine extends AbstractRatingsEngine {
         logger.info("Race factor calculation complete (100%)");
 
         if (debug) {
-          logger.debug("Calculating final ratings for " + racesForDate.getValue().size() + " Races (Meeting " + racesByDateForMarket.getKey() + ", Date: " +
-              racesForDate.getKey()  + ").");
+          logger.debug("Calculating final ratings for " + racesForDate.getValue().size() + " Races (Meeting " + marketId + ", Date: " +
+                  raceDate + ").");
         }
 
         //////
@@ -237,8 +241,8 @@ public class RufRatingsEngine extends AbstractRatingsEngine {
           storeRatings(racesForDate.getValue(), ratingsTypeId, ratingsRaceValidityChecker, horseRaceRatings, ratingsRaces, racingService, ratingsService,
                   debug);
         } catch (Exception e) {
-          logger.error("Failed to store ratings for date: " + racesForDate.getKey(), e);
-          marketUnsuccessfulDates.add(racesForDate.getKey());
+          logger.error("Failed to store ratings for date: " + raceDate, e);
+          marketUnsuccessfulDates.add(raceDate);
           continue;
         }
         // Output some progress info.
@@ -348,23 +352,23 @@ public class RufRatingsEngine extends AbstractRatingsEngine {
   /**
    *  Build up the map of related races for each race. Also build up the map of races each horse was involved in.
    * @param ratingsRaces The map of RufRatingsRaces, keyed on race ID.
-   * @param relatedRaceIds The map of Collections of RufRatingsRaces, keyed on race ID.
-   * @param horseRaceRatings The map of Collections of RufRatingsRaces, keyed on horse ID.
+   * @param relatedRaceIds The map of Collections of RufRatingsRaces, keyed on race ID.   Jian: output parameter
+   * @param horseRaceRatings The map of Collections of RufRatingsRaces, keyed on horse ID. Jian: output parameter
    * @throws Exception If the related races Map couldn't be built.
    */
   private void getRelatedRaces(Map<Long, RufRatingsRace> ratingsRaces, Map<Long, Collection<Long>> relatedRaceIds,
           Map<Long, Collection<RufRatingsRace>> horseRaceRatings) throws Exception {
 
     // Horse.id -> {Race.id}
-    Map<Long, Collection<Long>> horsesRaces = new HashMap<Long, Collection<Long>>();
+    Map<Long, Collection<Long>> horseAndTheirRaces = new HashMap<Long, Collection<Long>>();
     // Get a map of all races each horse has been in.
     for (RufRatingsRace ratingsRace : ratingsRaces.values()) {
       Map<Long, RufRatingsRunner> runners = ratingsRace.getRunners();
       for (Long horseId : runners.keySet()) {
-        Collection<Long> horseRaces = horsesRaces.get(horseId);
+        Collection<Long> horseRaces = horseAndTheirRaces.get(horseId);
         if (horseRaces == null) {
           horseRaces = new ArrayList<Long>();
-          horsesRaces.put(horseId, horseRaces);
+          horseAndTheirRaces.put(horseId, horseRaces);
         }
         horseRaces.add(ratingsRace.getRaceId());
       }
@@ -377,7 +381,7 @@ public class RufRatingsEngine extends AbstractRatingsEngine {
         relatedRaceIds.put(ratingsRace.getRaceId(), relatedRaces);
       }
       for (RufRatingsRunner ratingsRunner : ratingsRace.getRunners().values()) {
-        Collection<Long> horseRaces = horsesRaces.get(ratingsRunner.getHorseId());
+        Collection<Long> horseRaces = horseAndTheirRaces.get(ratingsRunner.getHorseId());
         for (Long horseRaceId : horseRaces) {
           if (!horseRaceId.equals(ratingsRace.getRaceId()) && !relatedRaces.contains(horseRaceId)) {
             // If the 2 races are compatible then make a note of the relationship.

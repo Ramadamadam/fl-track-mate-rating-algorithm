@@ -1,0 +1,6 @@
+@startuml
+(*) --> "divide races by market"
+"divide races by market" --> "further divide races by date"
+"further divide races by date" --> "calculate for each date"
+"calculate for each date" --> "save the daily result into database"
+@enduml

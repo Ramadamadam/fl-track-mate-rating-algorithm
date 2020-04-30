@@ -1,0 +1,36 @@
+@startuml
+(*) --> "workout a period range for calculation"
+
+note right
+    the date input is the date it "processes for"
+    end date = dateInput - 2
+    start date = some time ago (by default 6 months)
+end note
+
+
+"workout a period range for calculation" --> "get races of this period in current market"
+
+"get races of this period in current market" --> "find out all the runners for each race in these races"
+note right
+runner = horse in a race
+end note
+
+"find out all the runners for each race in these races" --> "workout the runner factors for each horse in these races"
+note right
+what's the runner factors for???
+end note
+
+"workout the runner factors for each horse in these races" --> "get all related races for each race"
+note right
+if two races share a same runner, they are considered related
+Unless their race types are not compatible (???)
+end note
+
+"get all related races for each race" --> "calculate race factors for each race"
+note right
+Very complicated. Will come later (???)
+May not need to understand it. Can just do a blind conversion
+end note
+
+"calculate race factors for each race" --> (*)
+@enduml

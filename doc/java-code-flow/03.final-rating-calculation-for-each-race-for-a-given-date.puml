@@ -1,0 +1,7 @@
+@startuml
+(*) --> "for every race, get all the runners"
+
+
+"for every race, get all the runners" --> "for every runner, calculate the ratings"
+"for every runner, calculate the ratings" --> (*)
+@enduml

@@ -1,0 +1,7 @@
+@startuml
+(*) --> "Get all the races by raceIds given"
+
+"Get all the races by raceIds given" --> "calculate ratings for all rating types"
+
+"calculate ratings for all rating types" --> (*)
+@enduml
