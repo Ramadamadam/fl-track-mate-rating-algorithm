@@ -1,7 +1,14 @@
 @startuml
+
+title Basic flow
+
 (*) --> "Get all the races by raceIds given"
 
 "Get all the races by raceIds given" --> "calculate ratings for all rating types"
 
+
 "calculate ratings for all rating types" --> (*)
+note right
+See "Ratings calculation for a single race type"
+end note
 @enduml

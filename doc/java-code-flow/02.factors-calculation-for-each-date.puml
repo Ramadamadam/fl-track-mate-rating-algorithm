@@ -1,4 +1,5 @@
 @startuml
+title Race factor calculation for each date
 (*) --> "workout a period range for calculation"
 
 note right

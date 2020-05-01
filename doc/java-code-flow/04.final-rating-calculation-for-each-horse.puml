@@ -1,4 +1,5 @@
 @startuml
+title Rating calculation for each horse
 (*) --> "get all the horses' runner records among related races"
 
 "get all the horses' runner records among related races" --> "find out best, worst and average ratings"

@@ -1,7 +1,11 @@
 @startuml
+title Rating calculation for each race and date
 (*) --> "for every race, get all the runners"
 
 
 "for every race, get all the runners" --> "for every runner, calculate the ratings"
 "for every runner, calculate the ratings" --> (*)
+note right
+See "Rating calculation for each horse"
+end note
 @enduml
