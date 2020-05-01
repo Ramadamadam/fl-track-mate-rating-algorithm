@@ -1,1 +1,1 @@
-# fl-track-mate-rating-algorithm
+# fl-trackmate-rating-algorithm
