@@ -308,12 +308,13 @@ class RaceTableRecord
     public $silks;
 
     /**
+     * Extract runner recorders
      * @param array $single_race_table_records
      * @return array|RaceRunner[]
      */
     public static function extractRaceRunnersOfSingleRace(array $single_race_table_records): array
     {
-        return array_map(function (RaceTableRecord $table_record) {
+        $raceRunners = array_map(function (RaceTableRecord $table_record) {
             $raceRunner = new RaceRunner();
             $raceRunner->horse_key = $table_record->toHorseKey();
             $raceRunner->placing_numerical = $table_record->placing_numerical;
@@ -321,6 +322,8 @@ class RaceTableRecord
             $raceRunner->total_distance_beat = $table_record->total_distance_beat;
             return $raceRunner;
         }, $single_race_table_records);
+
+        return $raceRunners;
     }
 
     public function toHorseKey(): HorseKey
@@ -336,6 +339,7 @@ class RaceTableRecord
     {
         $race = new Race();
         $race->race_key = $table_record->toRaceKey();
+        $race->race_distance_furlongs = $table_record->race_distance_furlongs;
         return $race;
     }
 

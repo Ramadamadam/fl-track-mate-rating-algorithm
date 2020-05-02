@@ -3,6 +3,7 @@ namespace Trackmate\RufRatingRewrite\Algorithm;
 
 use Trackmate\RufRatingRewrite\DataAccess\RaceTableRecord;
 use Trackmate\RufRatingRewrite\Model\HorseKey;
+use Trackmate\RufRatingRewrite\Model\Race;
 use Trackmate\RufRatingRewrite\Model\RaceKey;
 use Trackmate\RufRatingRewrite\Model\RaceRunner;
 use function Trackmate\RufRatingRewrite\DataAccess\get_table_records_by_race_key;
@@ -20,7 +21,7 @@ require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
 class RufRating
 {
     public HorseKey $horse_key;
-    public ?float $race_runner_factor;
+    public ?float $race_runner_factor = null;
 }
 
 
@@ -40,22 +41,26 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, int $days_back): a
 {
 
     $this_race_table_records = get_table_records_by_race_key($race_key);
+    if (empty($this_race_table_records)) {
+        return [];
+    }
+
     $this_race_runners = RaceTableRecord::extractRaceRunnersOfSingleRace($this_race_table_records);
+    $this_race = RaceTableRecord::extractRace($this_race_table_records[array_key_first($this_race_table_records)]);
 
     $ratings = [];
     //calculate for each runner
     foreach ($this_race_runners as $race_runner) {
-        $ruf_rating = get_ruf_rating_for_race_runner($race_runner);
+        $ruf_rating = get_ruf_rating_for_race_runner($race_runner, $this_race);
         array_push($ratings, $ruf_rating);
     }
     return $ratings;
 }
 
-function get_ruf_rating_for_race_runner(RaceRunner $race_runner): RufRating
+function get_ruf_rating_for_race_runner(RaceRunner $race_runner, Race $race): RufRating
 {
     $ruf_rating = new RufRating();
     $ruf_rating->horse_key = $race_runner->horse_key;
-
 
 
     //if not run, no rating.
@@ -63,34 +68,12 @@ function get_ruf_rating_for_race_runner(RaceRunner $race_runner): RufRating
         return $ruf_rating;
     }
 
-    //weird distance from winner?
-    if(!$race_runner->isDistanceBeatMakingSense()){
+    //weird distance from winner? no rating
+    if (!$race_runner->isDistanceBeatMakingSense()) {
         return $ruf_rating;
     }
 
-
-
-    // Ignore runners with no result.
-
-        // Build up a RufRatingsRunner.
-//        double runnerFactor = raceDistance / (raceDistance - distanceFromWinner);
-//        runnerFactors.put(raceRunner.getId(), runnerFactor);
-//
-//        if (runnerFactor >= 1.02) {
-//            // If the runner was too far behind then don't rate.
-//            if (logger.isDebugEnabled()) {
-//                logger.debug("Runner has ruf factor of >= 1.02 (" + runnerFactor + "): " + raceRunner.getId() + " (" + raceRunner.getHorse().getName() + ")");
-//            }
-//            //continue;
-//        } else {
-//            RufRatingsRunner ratingsRunner = new RufRatingsRunner();
-//          ratingsRunner.setDate(periodRace.getRaceDate());
-//          ratingsRunner.setHorseId(raceRunner.getHorse().getId());
-//          ratingsRunner.setRating(runnerFactor);
-//          ratingsRace.addRunner(ratingsRunner);
-//        }
-
-
+    $ruf_rating->race_runner_factor = $race->race_distance_furlongs / ($race->race_distance_furlongs - $race_runner->total_distance_beat);
     return $ruf_rating;
 }
 

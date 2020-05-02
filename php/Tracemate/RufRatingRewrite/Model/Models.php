@@ -85,5 +85,6 @@ class RaceRunner
 class Race
 {
     public RaceKey $race_key;
+    public float $race_distance_furlongs;
 }
 ?>
