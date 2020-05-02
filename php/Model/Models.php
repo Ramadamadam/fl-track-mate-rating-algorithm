@@ -55,4 +55,14 @@ class HorseKey
     public $horse_type;
 }
 
+/**
+ * Class Runner  a horse's information in a single race
+ * @package Trackmate\RufRatingRewrite\Model
+ */
+class RaceRunner
+{
+    public HorseKey $horse_key;
+}
+
+
 ?>

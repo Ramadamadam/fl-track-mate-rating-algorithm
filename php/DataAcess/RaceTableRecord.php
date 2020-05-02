@@ -2,6 +2,12 @@
 
 namespace Trackmate\RufRatingRewrite\DataAccess;
 
+
+require_once __DIR__ . '/../Model/Models.php';
+
+use Trackmate\RufRatingRewrite\Model\HorseKey;
+use Trackmate\RufRatingRewrite\Model\RaceRunner;
+
 class RaceTableRecord
 {
     /**
@@ -299,5 +305,27 @@ class RaceTableRecord
      */
     public $silks;
 
+    /**
+     * @param array $single_race_table_records
+     * @return array|RaceRunner[]
+     */
+    public static function extractRaceRunnersOfSingleRace(array $single_race_table_records): array
+    {
+        return array_map(function (RaceTableRecord $tableRecord) {
+            $horseKey = $tableRecord->toHorseKey();
+            $raceRunner = new RaceRunner();
+            $raceRunner->horse_key = $horseKey;
+            return $raceRunner;
+        }, $single_race_table_records);
+    }
 
+    public function toHorseKey(): HorseKey
+    {
+        $horse_key = new HorseKey();
+        $horse_key->horse_name = $this->horse_name;
+        $horse_key->horse_type = $this->horse_type;
+        return $horse_key;
+    }
 }
+
+

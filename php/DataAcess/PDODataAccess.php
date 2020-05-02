@@ -11,10 +11,12 @@ require_once __DIR__.'/RaceTableRecord.php';
 use Trackmate\RufRatingRewrite\DataAccess\RaceTableRecord;
 
 
+/**
+ * @param RaceKey $race_key
+ * @return array|RaceTableRecord[]
+ */
 function get_table_records_by_race_key(RaceKey $race_key): array
 {
-
-    new RaceTableRecord();
 
     $pdo = null;
     try {
