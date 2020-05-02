@@ -1,6 +1,6 @@
 <?php
 
-namespace trackmate\ruf\rating\rewrite\Entities;
+namespace trackmate\ruf\rating\rewrite\DataAccess;
 
 class RaceTableRecord
 {

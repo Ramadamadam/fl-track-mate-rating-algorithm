@@ -3,22 +3,33 @@ namespace Trackmate\RufRatingRewrite\Algorithm;
 
 use DateTime;
 
+require_once '../Model/Models.php';
+use trackmate\ruf\rating\rewrite\Model\RaceKey;
+use trackmate\ruf\rating\rewrite\Model\HorseKey;
+
 /**
- * The result data structure
+ * A horse's ruf rating in a single race
  */
 class RufRating
 {
-    public string $horse_name;
-    public string $race_name;
-    public DateTime $race_date_time;
+    public HorseKey $horseKey;
     public float $rating;
 }
 
 
 /**
- * @return array:  <RufRating>
+ * Say there is a race tomorrow. Predict all horses' ruf ratings based each horse's racing record from [yesterday- days_back,  yesterday]
+ * Corresponding Java code for the date range is
+ *
+    Date periodEndDate = RacingHelper.getOffsetDate(raceDate, -2, Calendar.DATE);
+    Date periodStartDate = RacingHelper.getOffsetDate(periodEndDate, -calendarModifactionQuantity, calendarModificationUnit);
+ *
+ *
+ * @param RaceKey $raceKey
+ * @param int $days_back
+ * @return array|RufRating[]
  */
-function get_horse_ruf_ratings(): array
+function get_ruf_ratings_for_race_next_day(RaceKey $raceKey, int $days_back): array
 {
     $rufRating = new RufRating();
     $rufRating->race_date_time = new DateTime();
@@ -27,6 +38,9 @@ function get_horse_ruf_ratings(): array
         $rufRating
     ];
 }
+
+
+
 
 ?>
 
