@@ -8,32 +8,21 @@ namespace Trackmate\RufRatingRewrite\Model;
 class RaceKey
 {
 
-    /**
-     * @var string|null
-     */
-    public $race_type;
 
-    /**
-     * @var string|null
-     */
-    public $race_name;
+    public ?string $race_type = null;
 
 
-    /**
-     * @var string|null
-     */
-    public $race_class;
+    public ?string $race_name = null;
 
 
-    /**
-     * @var string|null
-     */
-    public $race_date;
 
-    /**
-     * @var string|null
-     */
-    public $race_time;
+    public ?string $race_class = null;
+
+
+
+    public ?string $race_date = null;
+
+    public ?string $race_time = null;
 
 }
 
@@ -43,16 +32,8 @@ class RaceKey
  */
 class HorseKey
 {
-
-    /**
-     * @var string|null
-     */
-    public $horse_name;
-
-    /**
-     * @var string|null
-     */
-    public $horse_type;
+    public ?string $horse_name = null;
+    public ?string $horse_type = null;
 }
 
 /**
@@ -62,9 +43,9 @@ class HorseKey
 class RaceRunner
 {
     public HorseKey $horse_key;
-    public ?int $placing_numerical;
-    public ?string $place;
-    public ?float $total_distance_beat;
+    public ?int $placing_numerical = null;
+    public ?string $place = null;
+    public ?float $total_distance_beat = null;
 
     public function isDistanceBeatMakingSense(): bool {
         return isset($this->total_distance_beat) && $this->total_distance_beat >= 0;
@@ -85,6 +66,6 @@ class RaceRunner
 class Race
 {
     public RaceKey $race_key;
-    public float $race_distance_furlongs;
+    public ?float $race_distance_furlongs = null;
 }
 ?>
