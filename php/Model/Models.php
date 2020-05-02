@@ -1,6 +1,6 @@
 <?php
 
-namespace trackmate\ruf\rating\rewrite\Model;
+namespace Trackmate\RufRatingRewrite\Model;
 
 /**
  * Class RaceKey  -> A composite key which in together define a unique race
