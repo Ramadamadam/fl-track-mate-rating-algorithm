@@ -6,6 +6,8 @@ namespace Trackmate\RufRatingRewrite\DataAccess;
 require_once __DIR__ . '/../Model/Models.php';
 
 use Trackmate\RufRatingRewrite\Model\HorseKey;
+use Trackmate\RufRatingRewrite\Model\Race;
+use Trackmate\RufRatingRewrite\Model\RaceKey;
 use Trackmate\RufRatingRewrite\Model\RaceRunner;
 
 class RaceTableRecord
@@ -311,10 +313,12 @@ class RaceTableRecord
      */
     public static function extractRaceRunnersOfSingleRace(array $single_race_table_records): array
     {
-        return array_map(function (RaceTableRecord $tableRecord) {
-            $horseKey = $tableRecord->toHorseKey();
+        return array_map(function (RaceTableRecord $table_record) {
             $raceRunner = new RaceRunner();
-            $raceRunner->horse_key = $horseKey;
+            $raceRunner->horse_key = $table_record->toHorseKey();
+            $raceRunner->placing_numerical = $table_record->placing_numerical;
+            $raceRunner->place = $table_record->place;
+            $raceRunner->total_distance_beat = $table_record->total_distance_beat;
             return $raceRunner;
         }, $single_race_table_records);
     }
@@ -325,6 +329,26 @@ class RaceTableRecord
         $horse_key->horse_name = $this->horse_name;
         $horse_key->horse_type = $this->horse_type;
         return $horse_key;
+    }
+
+
+    public static function extractRace(RaceTableRecord $table_record): Race
+    {
+        $race = new Race();
+        $race->race_key = $table_record->toRaceKey();
+        return $race;
+    }
+
+
+    public function toRaceKey(): RaceKey
+    {
+        $race_key = new RaceKey();
+        $race_key->race_type = $race_key->race_type;
+        $race_key->race_name = $race_key->race_name;
+        $race_key->race_class = $race_key->race_class;
+        $race_key->race_date = $race_key->race_date;
+        $race_key->race_time = $race_key->race_time;
+        return $race_key;
     }
 }
 

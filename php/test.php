@@ -13,6 +13,8 @@ use function Trackmate\RufRatingRewrite\Algorithm\get_ruf_ratings_for_race_next_
 
 <hr/>
 
+
+
 <?php
 
 $race_key = new RaceKey();
@@ -27,7 +29,7 @@ $ruf_ratings = get_ruf_ratings_for_race_next_day($race_key, 3);
 ?>
 
 <h3><?= $race_key->race_name ?> </h3>
-<h4><?= $race_key->race_date ?> <?= $race_key->race_time ?> </h4>
+<h4><?=$race_key ->race_type ?> , <?=$race_key ->race_class ?> , <?= $race_key->race_date ?> <?= $race_key->race_time ?> </h4>
 
 <table border="1" cellpadding="10px">
     <thead>

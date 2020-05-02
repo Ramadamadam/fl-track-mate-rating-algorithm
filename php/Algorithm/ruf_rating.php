@@ -20,7 +20,7 @@ require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
 class RufRating
 {
     public HorseKey $horse_key;
-    public float $race_runner_factor;
+    public ?float $race_runner_factor;
 }
 
 
@@ -55,7 +55,42 @@ function get_ruf_rating_for_race_runner(RaceRunner $race_runner): RufRating
 {
     $ruf_rating = new RufRating();
     $ruf_rating->horse_key = $race_runner->horse_key;
-    $ruf_rating->race_runner_factor = 0.5;
+
+
+
+    //if not run, no rating.
+    if ($race_runner->isNotRun()) {
+        return $ruf_rating;
+    }
+
+    //weird distance from winner?
+    if(!$race_runner->isDistanceBeatMakingSense()){
+        return $ruf_rating;
+    }
+
+
+
+    // Ignore runners with no result.
+
+        // Build up a RufRatingsRunner.
+//        double runnerFactor = raceDistance / (raceDistance - distanceFromWinner);
+//        runnerFactors.put(raceRunner.getId(), runnerFactor);
+//
+//        if (runnerFactor >= 1.02) {
+//            // If the runner was too far behind then don't rate.
+//            if (logger.isDebugEnabled()) {
+//                logger.debug("Runner has ruf factor of >= 1.02 (" + runnerFactor + "): " + raceRunner.getId() + " (" + raceRunner.getHorse().getName() + ")");
+//            }
+//            //continue;
+//        } else {
+//            RufRatingsRunner ratingsRunner = new RufRatingsRunner();
+//          ratingsRunner.setDate(periodRace.getRaceDate());
+//          ratingsRunner.setHorseId(raceRunner.getHorse().getId());
+//          ratingsRunner.setRating(runnerFactor);
+//          ratingsRace.addRunner(ratingsRunner);
+//        }
+
+
     return $ruf_rating;
 }
 

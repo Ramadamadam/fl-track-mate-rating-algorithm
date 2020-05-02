@@ -62,7 +62,23 @@ class HorseKey
 class RaceRunner
 {
     public HorseKey $horse_key;
+    public ?int $placing_numerical;
+    public ?string $place;
+    public ?float $total_distance_beat;
+
+    public function isNotRun(): bool
+    {
+        return (!isset($this->placing_numerical)) || $this->placing_numerical <= 0;
+    }
+
+    public function isDistanceBeatMakingSense(): bool {
+        return isset($this->total_distance_beat) && $this->total_distance_beat >= 0;
+    }
 }
 
 
+class Race
+{
+    public RaceKey $race_key;
+}
 ?>
