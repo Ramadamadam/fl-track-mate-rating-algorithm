@@ -66,13 +66,18 @@ class RaceRunner
     public ?string $place;
     public ?float $total_distance_beat;
 
-    public function isNotRun(): bool
-    {
-        return (!isset($this->placing_numerical)) || $this->placing_numerical <= 0;
-    }
-
     public function isDistanceBeatMakingSense(): bool {
         return isset($this->total_distance_beat) && $this->total_distance_beat >= 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasRunTheRace(): bool
+    {
+        $placing_numerical_valid = $this->placing_numerical > 0;
+        $place_valid = preg_match("/^[1-9]+.*/", $this->place);
+        return $placing_numerical_valid && $place_valid;
     }
 }
 

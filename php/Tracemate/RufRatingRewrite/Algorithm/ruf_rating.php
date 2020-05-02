@@ -59,7 +59,7 @@ function get_ruf_rating_for_race_runner(RaceRunner $race_runner): RufRating
 
 
     //if not run, no rating.
-    if ($race_runner->isNotRun()) {
+    if (!$race_runner->hasRunTheRace()) {
         return $ruf_rating;
     }
 

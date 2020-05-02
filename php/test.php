@@ -1,8 +1,6 @@
 <?php
 
-namespace Trackmate\RufRatingRewrite;
-
-require_once __DIR__ . '/algorithm/ruf_rating.php';
+require_once __DIR__ . '/Tracemate/RufRatingRewrite/Algorithm/ruf_rating.php';
 
 use Trackmate\RufRatingRewrite\Model\RaceKey;
 use function Trackmate\RufRatingRewrite\Algorithm\get_ruf_ratings_for_race_next_day;

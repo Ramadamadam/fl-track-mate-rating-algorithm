@@ -4,10 +4,10 @@ namespace Trackmate\RufRatingRewrite\DataAccess;
 
 use PDO;
 
-require_once __DIR__.'/../Model/Models.php';
+require_once __DIR__ . '/../Model/Models.php';
 use Trackmate\RufRatingRewrite\Model\RaceKey;
 
-require_once __DIR__.'/RaceTableRecord.php';
+require_once __DIR__ . '/RaceTableRecord.php';
 use Trackmate\RufRatingRewrite\DataAccess\RaceTableRecord;
 
 
