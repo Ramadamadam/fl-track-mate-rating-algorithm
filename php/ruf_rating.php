@@ -1,20 +1,26 @@
 <?php
 
-    /**
-    *  Return all the ruf ratings
-    */
-    function get_ruf_ratings(): array{
+/**
+ * The result data structure
+ */
+class RufRating
+{
+    public string $horse_name;
+    public string $race_name;
+    public DateTime $race_date;
+    public float $rating;
+}
 
-        return [
-            "type" => "ruf",
-            "200_day_avg" => 60,
-            "100_day_avg" => 50,
-            "last_race_rating" => 90,
-            "best_rating" => 100,
-            "worst_rating" => 10
-        ];
 
-    }
+/**
+ * @return array:  <DateTime -> RufRating>
+ */
+function get_horse_ruf_ratings(): array
+{
+    $rufRating = new RufRating();
+
+    return $rufRating;
+}
 
 ?>
 

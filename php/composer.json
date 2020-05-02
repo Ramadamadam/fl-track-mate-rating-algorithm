@@ -1,0 +1,5 @@
+{
+    "require": {
+        "kristijorgji/db-to-php": "^1.0"
+    }
+}
