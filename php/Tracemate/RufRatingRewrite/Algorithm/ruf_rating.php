@@ -18,11 +18,11 @@ require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
 class RufRatingsResult
 {
     public ?Race $target_race = null;
-    public ?array $relatedRaceRatings = [];
+    public ?array $history_race_ratings = [];
 }
 
 /**
- * A horse's ruf rating in a single race among related races
+ * A horse's ruf rating for a single race
  */
 class RufRating
 {
@@ -76,45 +76,45 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
 
     $races_horses_in = $dataAccess->getRaceRunnersByHorsesBetween($start_date, $end_date, $horses);
 
-    $related_race_runners = filter_compatiple($races_horses_in, $ruf_ratings_result->target_race);
+    $history_race_runners = filter_compatiple($races_horses_in, $ruf_ratings_result->target_race);
 
     //calculate for each runner
-    foreach ($related_race_runners as $related_race_runner) {
-        $ruf_rating = get_ruf_rating_for_race_runner($related_race_runner, $length_per_furlong);
+    foreach ($history_race_runners as $history_race_runner) {
+        $ruf_rating = get_ruf_rating_for_race_runner($history_race_runner, $length_per_furlong);
         if ($ruf_rating->isValid()) {
-            array_push($ruf_ratings_result->relatedRaceRatings, $ruf_rating);
+            array_push($ruf_ratings_result->history_race_ratings, $ruf_rating);
         }
     }
 
     //filter out invalid ones
-    $ruf_ratings_result->relatedRaceRatings = array_filter($ruf_ratings_result->relatedRaceRatings, fn($rating) => $rating->isValid());
+    $ruf_ratings_result->history_race_ratings = array_filter($ruf_ratings_result->history_race_ratings, fn($rating) => $rating->isValid());
 
-    // calculate_race_factors_for_all($related_race_runners, $ruf_ratings_result->target_race);
+    // calculate_race_factors_for_all($history_race_runners, $ruf_ratings_result->target_race);
 
 
     return $ruf_ratings_result;
 }
 
-function get_ruf_rating_for_race_runner(RaceRunner $related_race_runner, $length_per_furlong): RufRating
+function get_ruf_rating_for_race_runner(RaceRunner $race_runner, $length_per_furlong): RufRating
 {
 
 
     $ruf_rating = new RufRating();
-    $ruf_rating->race_runner = $related_race_runner;
+    $ruf_rating->race_runner = $race_runner;
 
 
     //if not run, no rating.
-    if (!$related_race_runner->hasRunTheRace()) {
+    if (!$race_runner->hasRunTheRace()) {
         return $ruf_rating;
     }
 
     //weird distance from winner? no rating
-    if (!$related_race_runner->isDistanceBeatMakingSense()) {
+    if (!$race_runner->isDistanceBeatMakingSense()) {
         return $ruf_rating;
     }
 
-    $race_distance_in_lengths = $related_race_runner->race->race_distance_furlongs * $length_per_furlong;
-    $ruf_rating->runner_factor = $race_distance_in_lengths / ($race_distance_in_lengths - $related_race_runner->total_distance_beat);
+    $race_distance_in_lengths = $race_runner->race->race_distance_furlongs * $length_per_furlong;
+    $ruf_rating->runner_factor = $race_distance_in_lengths / ($race_distance_in_lengths - $race_runner->total_distance_beat);
     return $ruf_rating;
 }
 

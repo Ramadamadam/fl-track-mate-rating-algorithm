@@ -24,7 +24,7 @@ $length_per_furlong = 82.5;
 
 $ruf_ratings_result = get_ruf_ratings_for_race_next_day($race_key, $race_dates_interval, $length_per_furlong);
 $target_race = $ruf_ratings_result->target_race;
-$ruf_ratings = $ruf_ratings_result->relatedRaceRatings;
+$ruf_ratings = $ruf_ratings_result->history_race_ratings;
 ?>
 <h3>Target race: <?= $target_race -> race_name ?>, <?= $target_race->race_type ?> , <?= $target_race->race_class ?> , <?= $target_race->race_key->race_date ?> <?= $target_race->race_key->race_time ?>  </h3>
 
