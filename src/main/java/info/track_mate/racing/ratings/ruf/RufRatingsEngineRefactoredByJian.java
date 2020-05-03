@@ -646,10 +646,14 @@ public class RufRatingsEngineRefactoredByJian extends AbstractRatingsEngine {
                 continue;
               }
 
-              for (Map.Entry<Long, RufRatingsRunner> ratingsRunnerEntry : ratingsRace.getRunners().entrySet()) {
-                RufRatingsRunner relatedRunner = relatedRace.getRunner(ratingsRunnerEntry.getKey());
+              Map<Long, RufRatingsRunner> runnersOfOneRace = ratingsRace.getRunners();
+              for (Map.Entry<Long, RufRatingsRunner> ratingsRunnerEntry : runnersOfOneRace.entrySet()) {
+                Long horseId = ratingsRunnerEntry.getKey();
+                RufRatingsRunner ratingsRunner = ratingsRunnerEntry.getValue();
+
+                RufRatingsRunner relatedRunner = relatedRace.getRunner(horseId);
                 if (relatedRunner != null) {
-                  double runnerRating = ratingsRunnerEntry.getValue().getRating() * tmpFactor;
+                  double runnerRating = ratingsRunner.getRating() * tmpFactor;
                   double relatedRunnerRating = relatedRunner.getRating() * relatedRace.getFactor();
                   double distanceBetweenRunners = Math.abs(runnerRating - relatedRunnerRating);
                   distanceBetweenRaces += distanceBetweenRunners;

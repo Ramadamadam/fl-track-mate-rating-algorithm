@@ -13,6 +13,7 @@ define("RACE_RATINGS_INCREMENT_REDUCTION_FACTOR", 0.1);
 define("RACE_RATINGS_INCREMENT_MULTIPLIER", 2);
 
 
+use Trackmate\RufRatingRewrite\Algorithm\RelatedRaceMatrix;
 use Trackmate\RufRatingRewrite\Model\Race;
 use DateInterval;
 use Trackmate\RufRatingRewrite\DataAccess\PDODataAccess;
@@ -24,10 +25,10 @@ use function Trackmate\RufRatingRewrite\DataAccess\get_table_records_by_race_key
 
 
 /**
- * @param array|RaceRunner[] $related_race_runners
- * @param array|RufRating[] $related_ruf_ratings  //values will be changed
+ * @param array $ruf_ratings //values will be changed
+ * @param RelatedRaceMatrix $related_race_matrix
  */
-function calculate_race_factors_for_all(array $related_race_runners, array $related_ruf_ratings): void
+function calculate_race_factors_for_all(array $ruf_ratings, RelatedRaceMatrix $related_race_matrix): void
 {
 
 
@@ -40,7 +41,7 @@ function calculate_race_factors_for_all(array $related_race_runners, array $rela
         $distanceImproving = true; //type is boolean in boolean legacy java code
         while ($distanceImproving) {
             $distanceBetweenAllRaces = 0; //type is double in the legacy java code
-            foreach ( $related_ruf_ratings as $ruf_rating) {  //type is RufRatingsRace, name is "ratingsRace" in the legacy java code
+            foreach ($ruf_ratings as $ruf_rating) {  //type is RufRatingsRace, name is "ratingsRace" in the legacy java code
                 $iterationStartFactor = $ruf_rating -> $race_factor;  //type is double in the legacy java code
                 $rangeAdjust = RACE_RATINGS_INCREMENT_MULTIPLIER * $incrementSize; //type is double in the legacy java code
                 $startFactor = $iterationStartFactor - $rangeAdjust; //type is double in the legacy java code

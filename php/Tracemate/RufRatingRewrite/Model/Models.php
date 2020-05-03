@@ -24,6 +24,12 @@ class RaceKey
 
     }
 
+    public function isEqualTo($that){
+        return ($this->track_name == $that -> track_name
+            && $this->race_date == $that -> race_date
+            && $this->race_time == $that -> race_time);
+    }
+
     public function __toString()
     {
         return $this->track_name .' '. $this->race_date .' '. $this->race_time;
