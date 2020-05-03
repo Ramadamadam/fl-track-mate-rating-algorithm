@@ -35,9 +35,10 @@ class RufRating
  *
  * @param RaceKey $race_key
  * @param int $days_back
+ * @param float $length_per_furlong  How many lengths are there per furlong?
  * @return array|RufRating[]
  */
-function get_ruf_ratings_for_race_next_day(RaceKey $race_key, int $days_back): array
+function get_ruf_ratings_for_race_next_day(RaceKey $race_key, int $days_back, float $length_per_furlong): array
 {
 
     $this_race_table_records = get_table_records_by_race_key($race_key);
@@ -51,13 +52,13 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, int $days_back): a
     $ratings = [];
     //calculate for each runner
     foreach ($this_race_runners as $race_runner) {
-        $ruf_rating = get_ruf_rating_for_race_runner($race_runner, $this_race);
+        $ruf_rating = get_ruf_rating_for_race_runner($race_runner, $this_race, $length_per_furlong);
         array_push($ratings, $ruf_rating);
     }
     return $ratings;
 }
 
-function get_ruf_rating_for_race_runner(RaceRunner $race_runner, Race $race): RufRating
+function get_ruf_rating_for_race_runner(RaceRunner $race_runner, Race $race, $length_per_furlong): RufRating
 {
     $ruf_rating = new RufRating();
     $ruf_rating->horse_key = $race_runner->horse_key;
@@ -73,10 +74,10 @@ function get_ruf_rating_for_race_runner(RaceRunner $race_runner, Race $race): Ru
         return $ruf_rating;
     }
 
-    $ruf_rating->race_runner_factor = $race->race_distance_furlongs / ($race->race_distance_furlongs - $race_runner->total_distance_beat);
+    $race_distance_in_lengths = $race->race_distance_furlongs * $length_per_furlong;
+    $ruf_rating->race_runner_factor = $race_distance_in_lengths / ($race_distance_in_lengths - $race_runner->total_distance_beat);
     return $ruf_rating;
 }
-
 
 ?>
 

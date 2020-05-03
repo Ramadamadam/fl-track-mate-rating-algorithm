@@ -209,7 +209,7 @@ public class RufRatingsEngine extends AbstractRatingsEngine {
           logger.debug("Found " + periodRaces.size() + " Races to process between " + periodStartDate + " and " + periodEndDate + ".");
         }
         // Get the runner factors and RufRatingsRaces.
-        Map<Long, Double> runnerFactors = new HashMap<Long, Double>(); //Jian: key = horseId
+        Map<Long, Double> runnerFactors = new HashMap<Long, Double>(); //Jian: key = runnerId
         Map<Long, RufRatingsRace> ratingsRaces = new HashMap<Long, RufRatingsRace>();
         getRunnerFactorsAndRatingsRaces(periodRaces, runnerFactors, ratingsRaces, racingService);
 
@@ -325,7 +325,8 @@ public class RufRatingsEngine extends AbstractRatingsEngine {
           continue;
         }
         // Build up a RufRatingsRunner.
-        double runnerFactor = raceDistance / (raceDistance - distanceFromWinner);
+        double runnerFactor = raceDistance /
+                (raceDistance - distanceFromWinner);
         runnerFactors.put(raceRunner.getId(), runnerFactor);
 
         if (runnerFactor >= 1.02) {
@@ -360,7 +361,7 @@ public class RufRatingsEngine extends AbstractRatingsEngine {
           Map<Long, Collection<RufRatingsRace>> horseRaceRatings) throws Exception {
 
     // Horse.id -> {Race.id}
-    Map<Long, Collection<Long>> horseAndTheirRaces = new HashMap<Long, Collection<Long>>();
+    Map<Long, Collection<Long>> horseAndTheirRaces = new HashMap<Long, Collection<Long>>(); //Jian: horse and the races they have been really in
     // Get a map of all races each horse has been in.
     for (RufRatingsRace ratingsRace : ratingsRaces.values()) {
       Map<Long, RufRatingsRunner> runners = ratingsRace.getRunners();
@@ -375,15 +376,16 @@ public class RufRatingsEngine extends AbstractRatingsEngine {
     }
 
     for (RufRatingsRace ratingsRace : ratingsRaces.values()) {
-      Collection<Long> relatedRaces = relatedRaceIds.get(ratingsRace.getRaceId());
+      Collection<Long> relatedRaces = relatedRaceIds.get(ratingsRace.getRaceId());  //Jian: initialise the the map of relatedRaceIds - start
       if (relatedRaces == null) {
         relatedRaces = new ArrayList<Long>();
         relatedRaceIds.put(ratingsRace.getRaceId(), relatedRaces);
-      }
-      for (RufRatingsRunner ratingsRunner : ratingsRace.getRunners().values()) {
-        Collection<Long> horseRaces = horseAndTheirRaces.get(ratingsRunner.getHorseId());
-        for (Long horseRaceId : horseRaces) {
-          if (!horseRaceId.equals(ratingsRace.getRaceId()) && !relatedRaces.contains(horseRaceId)) {
+      } //Jian: initialise the the map of relatedRaceIds - end
+      for (RufRatingsRunner ratingsRunner : ratingsRace.getRunners().values()) { //Jian: for each race, loop thru its runners
+        Collection<Long> horseRaceIds = horseAndTheirRaces.get(ratingsRunner.getHorseId()); //Jian: get all races this horse has been in
+        for (Long horseRaceId : horseRaceIds) {
+          if (!horseRaceId.equals(ratingsRace.getRaceId()) //Jian:  not the same race
+                  && !relatedRaces.contains(horseRaceId)) { //Jian: the race hasn't been included to result map yet
             // If the 2 races are compatible then make a note of the relationship.
             FullRaceType thisRaceType = ratingsRace.getFullRaceType();
             FullRaceType relatedRaceType = ratingsRaces.get(horseRaceId).getFullRaceType();

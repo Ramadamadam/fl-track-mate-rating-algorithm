@@ -21,12 +21,17 @@ $race_key->race_class = 'Class 5';
 $race_key->race_date = '2019-03-15';
 $race_key->race_time = '16:40:00';
 
-$ruf_ratings = get_ruf_ratings_for_race_next_day($race_key, 3);
+$days_back = 3;
+$length_per_furlong = 82.5;
+
+$ruf_ratings = get_ruf_ratings_for_race_next_day($race_key, $days_back, $length_per_furlong);
 
 ?>
 
-<h3><?= $race_key->race_name ?> </h3>
-<h4><?= $race_key->race_type ?> , <?= $race_key->race_class ?> , <?= $race_key->race_date ?> <?= $race_key->race_time ?> </h4>
+<h3>Upcoming race: <?= $race_key->race_name ?>, <?= $race_key->race_type ?> , <?= $race_key->race_class ?> , <?= $race_key->race_date ?> <?= $race_key->race_time ?>  </h3>
+
+<h4> Calculation period starts with <?= $days_back ?> days before <?= $race_key->race_date ?> </h4>
+<h4> 1 furlong = <?= $length_per_furlong ?> lengths. </h4>
 
 <table border="1" cellpadding="10px">
     <thead>
@@ -44,7 +49,7 @@ $ruf_ratings = get_ruf_ratings_for_race_next_day($race_key, 3);
 		<tr>		   
 		            <td>  {$rating->horse_key->horse_type} </td>
 		            <td>  {$rating->horse_key->horse_name} </td>
-		            <td>  {$rating->race_runner_factor} </td>
+		            <td>  TBD </td>
 		            <td>  TBD </td>
 		            <td>  TBD </td>
 		        </tr>
