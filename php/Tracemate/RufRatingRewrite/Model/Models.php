@@ -1,14 +1,16 @@
 <?php
 
 namespace Trackmate\RufRatingRewrite\Model;
-
+require __DIR__ . '/../../../vendor/autoload.php';
 
 use DateTime;
+use Ds\Hashable;
+use Ds\Set;
 
 /**
  * Class RaceKey  -> A composite key which in together define a unique race
  */
-class RaceKey
+class RaceKey implements Hashable
 {
     public ?string $track_name = null;
     public ?string $race_date = null;
@@ -24,39 +26,65 @@ class RaceKey
 
     }
 
-    public function isEqualTo($that){
-        return ($this->track_name == $that -> track_name
-            && $this->race_date == $that -> race_date
-            && $this->race_time == $that -> race_time);
-    }
 
     public function __toString()
     {
-        return $this->track_name .' '. $this->race_date .' '. $this->race_time;
+        return $this->track_name . ' ' . $this->race_date . ' ' . $this->race_time;
     }
 
+    function hash()
+    {
+        return $this->__toString();
+    }
+
+    function equals($that): bool
+    {
+        return ($this->track_name == $that->track_name
+            && $this->race_date == $that->race_date
+            && $this->race_time == $that->race_time);
+    }
 }
 
-class Race
+class Race implements Hashable
 {
     public RaceKey $race_key;
     public ?string $race_type = null;
     public ?string $race_name = null;
     public ?string $race_class = null;
     public ?float $race_distance_furlongs = null;
+
+    function hash()
+    {
+        return $this->race_key->hash();
+    }
+
+    function equals($obj): bool
+    {
+        return $this->race_key->equals($obj->race_key);
+    }
 }
 
 
-class Horse
+class Horse implements Hashable
 {
     public string $horse_name;  //the key
+
+    function hash()
+    {
+        return $this->horse_name;
+    }
+
+    function equals($obj): bool
+    {
+        return $this->horse_name == $obj->horse_name;
+    }
 }
 
 /**
  * A combination of horse + race + other informatin.  This is a rich domain model, meaning it uses other domain models as its members
  * @package Trackmate\RufRatingRewrite\Model
  */
-class RaceRunner
+class RaceRunner implements Hashable
 {
     /**
      * @var int The same as in the table
@@ -71,9 +99,21 @@ class RaceRunner
 
     public ?float $total_distance_beat = null;
 
-    public static function getAllHorses(array $race_runners)
+    public static function extractHorses(array $race_runners): Set
     {
-        return array_map(fn($runner) => $runner->horse, $race_runners);
+        $horse_array = array_map(fn($runner) => $runner->horse, $race_runners);
+        return new Set($horse_array);
+    }
+
+    public static function extractRaces(array $race_runners): Set
+    {
+        $race_array = array_map(fn($runner) => $runner->race, $race_runners);
+        return new Set($race_array);
+    }
+
+    public static function filterByRaceKey(array $race_runners, RaceKey $race_key): array
+    {
+        return array_filter($race_runners, fn($runner) => $runner->race->race_key->equals($race_key));
     }
 
     public function isDistanceBeatMakingSense(): bool
@@ -89,6 +129,16 @@ class RaceRunner
         $placing_numerical_valid = $this->placing_numerical > 0;
         $place_valid = preg_match("/^[1-9]+.*/", $this->place);
         return $placing_numerical_valid && $place_valid;
+    }
+
+    function hash()
+    {
+        return $this->id;
+    }
+
+    function equals($obj): bool
+    {
+        return $this->id == $obj->id;
     }
 }
 
