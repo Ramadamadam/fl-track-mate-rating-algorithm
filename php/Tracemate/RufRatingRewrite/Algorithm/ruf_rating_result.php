@@ -5,21 +5,28 @@ namespace Trackmate\RufRatingRewrite\Algorithm;
 use Ds\Map;
 use Trackmate\RufRatingRewrite\Model\Race;
 use Trackmate\RufRatingRewrite\Model\RaceKey;
+use Trackmate\RufRatingRewrite\Model\RaceRunner;
 
 
 class RufRatingFinalResult
 {
     public Race $target_race;
 
-    //type is RufRatingFinalResultEntry
-    public array $entries;
+    //<RaceRunner.Id, RufRatingFinalResultEntry>
+    public Map $entries;
+
+    public function __construct()
+    {
+        $this->entries = new Map();
+    }
 }
 
 class RufRatingFinalResultEntry
 {
-    public Race $target_race;
-
-
+    public RaceRunner $race_runner;
+    public float $runner_factor;
+    public float $race_factor;
+    public float $rating;
 }
 
 

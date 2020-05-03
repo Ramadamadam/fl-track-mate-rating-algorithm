@@ -30,7 +30,7 @@ require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
  * @param float $length_per_furlong How many lengths are there per furlong?
  * @return RufRatingMiddleResult|null  Null if the race doesn't exist
  */
-function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race_dates_interval, float $length_per_furlong): ?RufRatingMiddleResult
+function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race_dates_interval, float $length_per_furlong): ?RufRatingFinalResult
 {
 
     $dataAccess = new PDODataAccess();
@@ -76,7 +76,27 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
     $related_race_matrix = get_related_races_matrix($race_runner_having_factors);
     calculate_race_factors_for_all($ruf_rating_middle_result, $race_runner_having_factors, $related_race_matrix);
 
-    return $ruf_rating_middle_result;
+    //convert middle result to final result
+    $ruf_rating_final_result = new  RufRatingFinalResult();
+    $ruf_rating_final_result->target_race = $ruf_rating_middle_result->target_race;
+    foreach ($race_runner_having_factors as $runner) {
+        $entry = new RufRatingFinalResultEntry();
+        $entry->race_runner = $runner;
+        $entry->runner_factor = $ruf_rating_middle_result->getRunnerFactorByRunnerId($runner->id);
+        $entry->race_factor = $ruf_rating_middle_result->getRaceFactorByRaceKey($runner->race->race_key);
+
+
+        if (!isset($entry->runner_factor)  || !isset( $entry->race_factor)) {
+            continue;
+        }
+        $entry->rating = $entry->runner_factor * $entry->race_factor;
+
+        $ruf_rating_final_result->entries->put($runner->id, $entry);
+    }
+
+
+
+    return $ruf_rating_final_result;
 }
 
 
