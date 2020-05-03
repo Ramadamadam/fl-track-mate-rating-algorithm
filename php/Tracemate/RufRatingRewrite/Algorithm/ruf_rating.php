@@ -33,7 +33,7 @@ class RufRating
 
     public function isValid(): bool
     {
-        return isset($this->runner_factor) ; //&&  isset($this->race_factor);
+        return isset($this->runner_factor); //&&  isset($this->race_factor);
     }
 }
 
@@ -80,22 +80,22 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
 
     //calculate for each runner
     foreach ($related_race_runners as $related_race_runner) {
-        $ruf_rating = get_ruf_rating_for_race_runner($related_race_runner, $ruf_ratings_result->target_race, $length_per_furlong);
+        $ruf_rating = get_ruf_rating_for_race_runner($related_race_runner, $length_per_furlong);
         if ($ruf_rating->isValid()) {
             array_push($ruf_ratings_result->relatedRaceRatings, $ruf_rating);
         }
     }
 
     //filter out invalid ones
-    $ruf_ratings_result->relatedRaceRatings = array_filter($ruf_ratings_result->relatedRaceRatings , fn($rating) => $rating->isValid());
+    $ruf_ratings_result->relatedRaceRatings = array_filter($ruf_ratings_result->relatedRaceRatings, fn($rating) => $rating->isValid());
 
-    calculate_race_factor_for_all();
+    calculate_race_factor_for_all($related_race_runners, $ruf_ratings_result->target_race);
 
 
     return $ruf_ratings_result;
 }
 
-function get_ruf_rating_for_race_runner(RaceRunner $related_race_runner, Race $race, $length_per_furlong): RufRating
+function get_ruf_rating_for_race_runner(RaceRunner $related_race_runner, $length_per_furlong): RufRating
 {
 
 
@@ -113,13 +113,17 @@ function get_ruf_rating_for_race_runner(RaceRunner $related_race_runner, Race $r
         return $ruf_rating;
     }
 
-    $race_distance_in_lengths = $race->race_distance_furlongs * $length_per_furlong;
+    $race_distance_in_lengths = $related_race_runner->race->race_distance_furlongs * $length_per_furlong;
     $ruf_rating->runner_factor = $race_distance_in_lengths / ($race_distance_in_lengths - $related_race_runner->total_distance_beat);
     return $ruf_rating;
 }
 
-
-function calculate_race_factor_for_all(){
+/**
+ * @param array $related_race_runners values will be changed
+ * @param Race $target_race
+ */
+function calculate_race_factor_for_all(array $related_race_runners, Race $target_race): void
+{
 
 }
 
@@ -129,7 +133,8 @@ function calculate_race_factor_for_all(){
  * @param Race $target_race
  * @return array|RaceRunner[]
  */
-function filter_compatiple(array $race_runners,  Race $target_race){
+function filter_compatiple(array $race_runners, Race $target_race)
+{
     //TODO: do the filtering. For now just assume all are compatible
     return $race_runners;
 }
