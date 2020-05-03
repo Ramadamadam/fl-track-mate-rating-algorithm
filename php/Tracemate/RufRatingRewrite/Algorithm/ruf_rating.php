@@ -72,9 +72,9 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
     $start_date = clone $end_date;
     date_sub($start_date, $race_dates_interval);
 
-    $related_race_runners = $dataAccess->getRaceRunnersByHorsesBetween($start_date, $end_date, $horses);
+    $races_horses_in = $dataAccess->getRaceRunnersByHorsesBetween($start_date, $end_date, $horses);
 
-
+    $related_race_runners = filter_compatiple($races_horses_in, $ruf_ratings_result->target_race);
 
     //calculate for each runner
     foreach ($related_race_runners as $related_race_runner) {
@@ -109,6 +109,15 @@ function get_ruf_rating_for_race_runner(RaceRunner $related_race_runner, Race $r
     return $ruf_rating;
 }
 
+/**
+ * @param array|RaceRunner[] $race_runners
+ * @param Race $target_race
+ * @return array|RaceRunner[]
+ */
+function filter_compatiple(array $race_runners,  Race $target_race){
+    //TODO: do the filtering. For now just assume all are compatible
+    return $race_runners;
+}
 
 ?>
 

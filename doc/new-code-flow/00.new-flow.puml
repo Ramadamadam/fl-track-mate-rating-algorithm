@@ -3,12 +3,13 @@
 
 title New Code Flow
 note
- Input:  An upcoming race's key + Last X days for calculation
+ Input:  An target race's key + Last X days for calculation
 Output:  Ruf rating for every Runner during the period (Runner = combination of horse + race)
 end note
 
 :Get all the horses for this race;
 :Get all the runners the horses were in;
+:Filter out runners that are not compatible with the target race;
 repeat: pick a horse and its runners
 :Calculate the runner factor for every runner;
 repeat while (more data?) is (yes)
