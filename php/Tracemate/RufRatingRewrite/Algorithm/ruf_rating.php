@@ -27,11 +27,13 @@ class RufRatingsResult
 class RufRating
 {
     public RaceRunner $race_runner;
-    public ?float $race_runner_factor = null;
+    public ?float $runner_factor = null;
+    public ?float $race_factor = null;
+
 
     public function isValid(): bool
     {
-        return isset($this->race_runner_factor);
+        return isset($this->runner_factor) ; //&&  isset($this->race_factor);
     }
 }
 
@@ -83,6 +85,13 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
             array_push($ruf_ratings_result->relatedRaceRatings, $ruf_rating);
         }
     }
+
+    //filter out invalid ones
+    $ruf_ratings_result->relatedRaceRatings = array_filter($ruf_ratings_result->relatedRaceRatings , fn($rating) => $rating->isValid());
+
+    calculate_race_factor_for_all();
+
+
     return $ruf_ratings_result;
 }
 
@@ -105,9 +114,15 @@ function get_ruf_rating_for_race_runner(RaceRunner $related_race_runner, Race $r
     }
 
     $race_distance_in_lengths = $race->race_distance_furlongs * $length_per_furlong;
-    $ruf_rating->race_runner_factor = $race_distance_in_lengths / ($race_distance_in_lengths - $related_race_runner->total_distance_beat);
+    $ruf_rating->runner_factor = $race_distance_in_lengths / ($race_distance_in_lengths - $related_race_runner->total_distance_beat);
     return $ruf_rating;
 }
+
+
+function calculate_race_factor_for_all(){
+
+}
+
 
 /**
  * @param array|RaceRunner[] $race_runners

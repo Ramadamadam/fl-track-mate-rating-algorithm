@@ -602,7 +602,7 @@ public class RufRatingsEngineRefactoredByJian extends AbstractRatingsEngine {
 
   /**
    * Calculate the Race factors for each Race in the period.
-   * @param ratingsRaces The Map of RudRatingsRace, keyed on Race ID.
+   * @param ratingsRaces The Map of RudRatingsRace, keyed on Race ID.  //Jian: both input and output
    * @param relatedRaceIds The Map of Collections of related Race IDs, keyed on Race ID.
    * @param debug A boolean flag equivalent to logger.isDebugEnabled() to reduce calls to the logger variable (possibly futile, don't know).
    * @throws Exception on error.

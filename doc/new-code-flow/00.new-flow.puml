@@ -14,6 +14,7 @@ repeat: pick a horse and its runners
 :Calculate the runner factor for every runner;
 repeat while (more data?) is (yes)
 ->no;
+:Calculate race factors in a big chunk function;
 
 
 stop

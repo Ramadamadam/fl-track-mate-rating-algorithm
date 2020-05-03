@@ -51,7 +51,7 @@ $ruf_ratings = $ruf_ratings_result->relatedRaceRatings;
 		        
 		            <td>  {$rating->race_runner->horse->horse_name} </td>
 		            <td>  {$rating->race_runner->race->race_key} </td>
-		            <td>  {$rating->race_runner_factor} </td>
+		            <td>  {$rating->runner_factor} </td>
 		            <td>  TBD </td>
 		            <td>  TBD </td>
 		        </tr>
