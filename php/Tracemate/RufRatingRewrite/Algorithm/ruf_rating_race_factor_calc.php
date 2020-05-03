@@ -1,4 +1,5 @@
 <?php
+
 namespace Trackmate\RufRatingRewrite\Algorithm;
 
 //NOTE: The code is imported from the legacy java code "RufRatingsEngine.calculateRaceFactors()"
@@ -29,6 +30,12 @@ use function Trackmate\RufRatingRewrite\DataAccess\get_table_records_by_race_key
 function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle_result, array $all_race_runners, Map $related_race_matrix): void
 {
 
+    //set the values as 0 at first
+    $all_race_set = RaceRunner::extractRaces($all_race_runners);
+    foreach ($all_race_set as $race){
+        $ruf_rating_middle_result -> putRaceFactor($race -> race_key, 0);
+    }
+
 
     $incrementSize = RACE_RATINGS_START_INCREMENT_SIZE;
     for ($iteration = 0; $iteration < RACE_RATINGS_NUM_ITERATIONS; $iteration++) {
@@ -39,7 +46,7 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
         while ($distanceImproving) {
             $distanceBetweenAllRaces = 0; //type is double in the legacy java code
             foreach ($ruf_rating_middle_result->getRaceFactorMap()->pairs() as $race_key_and_race_factor) {  //type is RufRatingsRace, name is "ratingsRace" in the legacy java code
-                $this_race_key = $race_key_and_race_factor->race_key;
+                $this_race_key = $race_key_and_race_factor->key;
                 $this_race_runners = RaceRunner::filterByRaceKey($all_race_runners, $this_race_key);
 
                 $iterationStartFactor = $race_key_and_race_factor->value;  //type is double in the legacy java code
@@ -60,14 +67,15 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
                             continue;
                         }
 
-
                         foreach ($this_race_runners as $this_race_runner) { //type is Map.Entry< Long, RufRatingsRunner >  in the legacy java code
 
 
                             $related_race_runners = RaceRunner::filterByRaceKey($all_race_runners, $relatedRaceKey);
                             $related_race_runner_with_same_horse = current(RaceRunner::filterByHorseName($related_race_runners, $this_race_runner->horse->horse_name));
 
-                            if (!isset($related_race_runner_with_same_horse)) {
+
+
+                            if (!$related_race_runner_with_same_horse) {
                                 continue;
                             }
 
@@ -76,8 +84,8 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
                             $related_race_runner_factor = $ruf_rating_middle_result->getRunnerFactorByRunnerId($related_race_runner_with_same_horse->id);
 
                             $runnerRating = $this_race_runner_factor * $tmpFactor; //type is double in the legacy java code
-                            $relatedRunnerRating = $related_race_runner_factor * $ruf_rating_middle_result->getRaceFactorByRaceKey($related_race_runner_with_same_horse->race_key); //type is double in the legacy java code
-                            $distanceBetweenRunners = Math . abs($runnerRating - $relatedRunnerRating); //type is double in the legacy java code
+                            $relatedRunnerRating = $related_race_runner_factor * $ruf_rating_middle_result->getRaceFactorByRaceKey($related_race_runner_with_same_horse->race->race_key); //type is double in the legacy java code
+                            $distanceBetweenRunners = abs($runnerRating - $relatedRunnerRating); //type is double in the legacy java code
                             $distanceBetweenRaces += $distanceBetweenRunners;
 
                         }
@@ -90,8 +98,8 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
                     }
                 }
 
-                $race_key_and_race_factor . setFactor($bestFactor);
-                if ($smallestDistanceBetweenRaces != Double . MAX_VALUE) {
+                $ruf_rating_middle_result -> putRaceFactor($this_race_key, $bestFactor);
+                if ($smallestDistanceBetweenRaces != PHP_FLOAT_MAX) {
                     $distanceBetweenAllRaces += $smallestDistanceBetweenRaces;
                 }
             }

@@ -39,9 +39,14 @@ class RufRatingMiddleResult
         $this->race_factor_map = new Map();
     }
 
-    public function putRunnerFactor(int $runner_id, float $runner_factor)
+    public function putRunnerFactor(int $runner_id, float $factor)
     {
-        $this->runner_factor_map->put($runner_id, $runner_factor);
+        $this->runner_factor_map->put($runner_id, $factor);
+    }
+
+    public function putRaceFactor(RaceKey $race_key, float $factor)
+    {
+        $this->race_factor_map->put($race_key, $factor);
     }
 
     public function getAllRunnerIdSet()
@@ -68,5 +73,10 @@ class RufRatingMiddleResult
         $finalResult = new RufRatingFinalResult();
         $finalResult->target_race = $this->target_race;
 
+    }
+
+    public function getRunnerFactorByRunnerId($runner_id): ?float
+    {
+        return $this->runner_factor_map->get($runner_id);
     }
 }
