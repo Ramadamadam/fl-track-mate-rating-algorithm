@@ -17,7 +17,7 @@ $race_key->track_name = 'Chelmsford City';
 $race_key->race_date = '2019-03-15';
 $race_key->race_time = '16:40:00';
 
-$race_dates_interval = DateInterval::createFromDateString("6 months");
+$race_dates_interval = DateInterval::createFromDateString("6 month");
 $length_per_furlong = 82.5;
 
 $ruf_rating_final_result = get_ruf_ratings_for_race_next_day($race_key, $race_dates_interval, $length_per_furlong);
