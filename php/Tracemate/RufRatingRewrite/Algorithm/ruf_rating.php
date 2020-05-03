@@ -2,7 +2,6 @@
 namespace Trackmate\RufRatingRewrite\Algorithm;
 
 use Trackmate\RufRatingRewrite\DataAccess\RaceTableRecord;
-use Trackmate\RufRatingRewrite\Model\HorseKey;
 use Trackmate\RufRatingRewrite\Model\Race;
 use Trackmate\RufRatingRewrite\Model\RaceKey;
 use Trackmate\RufRatingRewrite\Model\RaceRunner;
@@ -20,7 +19,7 @@ require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
  */
 class RufRating
 {
-    public HorseKey $horse_key;
+    public RaceRunner $race_runner;
     public ?float $race_runner_factor = null;
 }
 
@@ -61,7 +60,7 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, int $days_back, fl
 function get_ruf_rating_for_race_runner(RaceRunner $race_runner, Race $race, $length_per_furlong): RufRating
 {
     $ruf_rating = new RufRating();
-    $ruf_rating->horse_key = $race_runner->horse_key;
+    $ruf_rating->race_runner = $race_runner->horse_name;
 
 
     //if not run, no rating.

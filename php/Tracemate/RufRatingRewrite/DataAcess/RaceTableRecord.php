@@ -5,7 +5,6 @@ namespace Trackmate\RufRatingRewrite\DataAccess;
 
 require_once __DIR__ . '/../Model/Models.php';
 
-use Trackmate\RufRatingRewrite\Model\HorseKey;
 use Trackmate\RufRatingRewrite\Model\Race;
 use Trackmate\RufRatingRewrite\Model\RaceKey;
 use Trackmate\RufRatingRewrite\Model\RaceRunner;
@@ -316,7 +315,7 @@ class RaceTableRecord
     {
         $raceRunners = array_map(function (RaceTableRecord $table_record) {
             $raceRunner = new RaceRunner();
-            $raceRunner->horse_key = $table_record->toHorseKey();
+            $raceRunner->horse_name = $table_record->horse_name;
             $raceRunner->placing_numerical = $table_record->placing_numerical;
             $raceRunner->place = $table_record->place;
             $raceRunner->total_distance_beat = $table_record->total_distance_beat;
@@ -326,13 +325,7 @@ class RaceTableRecord
         return $raceRunners;
     }
 
-    public function toHorseKey(): HorseKey
-    {
-        $horse_key = new HorseKey();
-        $horse_key->horse_name = $this->horse_name;
-        $horse_key->horse_type = $this->horse_type;
-        return $horse_key;
-    }
+
 
 
     public static function extractRace(RaceTableRecord $table_record): Race

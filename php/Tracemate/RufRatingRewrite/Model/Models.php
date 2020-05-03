@@ -24,21 +24,12 @@ class Race
 
 
 /**
- * Class HorseKey -> A composite key which in together define a unique horse
- */
-class HorseKey
-{
-    public ?string $horse_name = null;
-    public ?string $horse_type = null;
-}
-
-/**
  * Class Runner  a horse's information in a single race
  * @package Trackmate\RufRatingRewrite\Model
  */
 class RaceRunner
 {
-    public HorseKey $horse_key;
+    public string $horse_name;
     public ?int $placing_numerical = null;
     public ?string $place = null;
     public ?float $total_distance_beat = null;

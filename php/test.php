@@ -45,8 +45,8 @@ $ruf_ratings = get_ruf_ratings_for_race_next_day($race_key, $days_back, $length_
 
         echo <<<EOT
 		<tr>		   
-		            <td>  {$rating->horse_key->horse_type} </td>
-		            <td>  {$rating->horse_key->horse_name} </td>
+		            <td>  {$rating->race_runner->horse_type} </td>
+		            <td>  {$rating->race_runner->horse_name} </td>
 		            <td>  TBD </td>
 		            <td>  TBD </td>
 		            <td>  TBD </td>
