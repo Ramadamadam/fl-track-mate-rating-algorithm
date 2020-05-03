@@ -89,7 +89,7 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
     //filter out invalid ones
     $ruf_ratings_result->relatedRaceRatings = array_filter($ruf_ratings_result->relatedRaceRatings, fn($rating) => $rating->isValid());
 
-    calculate_race_factor_for_all($related_race_runners, $ruf_ratings_result->target_race);
+    // calculate_race_factors_for_all($related_race_runners, $ruf_ratings_result->target_race);
 
 
     return $ruf_ratings_result;
@@ -118,14 +118,7 @@ function get_ruf_rating_for_race_runner(RaceRunner $related_race_runner, $length
     return $ruf_rating;
 }
 
-/**
- * @param array $related_race_runners values will be changed
- * @param Race $target_race
- */
-function calculate_race_factor_for_all(array $related_race_runners, Race $target_race): void
-{
 
-}
 
 
 /**
