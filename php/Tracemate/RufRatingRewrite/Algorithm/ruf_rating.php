@@ -3,7 +3,6 @@ namespace Trackmate\RufRatingRewrite\Algorithm;
 
 use DateInterval;
 use Ds\Map;
-use Ds\Set;
 use Trackmate\RufRatingRewrite\DataAccess\PDODataAccess;
 use Trackmate\RufRatingRewrite\Model\Race;
 use Trackmate\RufRatingRewrite\Model\RaceKey;
@@ -13,34 +12,9 @@ use function Trackmate\RufRatingRewrite\DataAccess\get_table_records_by_race_key
 
 require_once __DIR__ . '/../Model/Models.php';
 
-
+require_once __DIR__ . '/ruf_rating_result.php';
+require_once __DIR__ . '/ruf_rating_race_factor_calc.php';
 require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
-
-
-class RufRatingsResult
-{
-    public Race $target_race;
-
-    //type is RufRating
-    public array $history_race_ratings = [];
-}
-
-/**
- * A horse's ruf rating for a single race
- */
-class RufRating
-{
-    public RaceRunner $race_runner;
-    public ?float $runner_factor = null;
-    public ?float $race_factor = null;
-
-
-    public function isValid(): bool
-    {
-        return isset($this->runner_factor); //&&  isset($this->race_factor);
-    }
-}
-
 
 
 /**
@@ -54,85 +28,80 @@ class RufRating
  * @param RaceKey $race_key
  * @param DateInterval $race_dates_interval such as "5 months"
  * @param float $length_per_furlong How many lengths are there per furlong?
- * @return RufRatingsResult|null  Null if the race doesn't exist
+ * @return RufRatingMiddleResult|null  Null if the race doesn't exist
  */
-function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race_dates_interval, float $length_per_furlong): ?RufRatingsResult
+function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race_dates_interval, float $length_per_furlong): ?RufRatingMiddleResult
 {
 
     $dataAccess = new PDODataAccess();
 
 
+    //get runners related to the target race
     $target_race_runners = $dataAccess->getRaceRunnersByRaceKey($race_key);
     if (empty($target_race_runners)) {
         return null;
     }
 
-    $ruf_ratings_result = new RufRatingsResult();
-    $ruf_ratings_result->target_race = $target_race_runners[array_key_first($target_race_runners)]->race;
+    //initiate the result object
+    $ruf_rating_middle_result = new RufRatingMiddleResult();
+    $ruf_rating_middle_result->target_race = $target_race_runners[array_key_first($target_race_runners)]->race;
 
+    //get horses of the target race
     $horse_set = RaceRunner::extractHorses($target_race_runners);
 
 
+    //get these horses' runners in the period
     //The java code's comment:  This will process the x days period up to and including yesterday (if processing ratings for tomorrow).
     $end_date = date_sub($race_key->getRaceDateAsDateType(), DateInterval::createFromDateString("2 days"));
     $start_date = clone $end_date;
     date_sub($start_date, $race_dates_interval);
-
     $history_races_runners = $dataAccess->getRaceRunnersByHorsesBetween($start_date, $end_date, $horse_set->toArray());
-    $history_races_runners = filter_compatible($history_races_runners, $ruf_ratings_result->target_race);
+    $history_races_runners = filter_compatible($history_races_runners, $ruf_rating_middle_result->target_race);
 
 
     //calculate runner-factor for each runner
     foreach ($history_races_runners as $history_race_runner) {
-        $ruf_rating = get_ruf_rating_for_race_runner($history_race_runner, $length_per_furlong);
-        if ($ruf_rating->isValid()) {
-            array_push($ruf_ratings_result->history_race_ratings, $ruf_rating);
+        $runner_factor = get_runner_factor($history_race_runner, $length_per_furlong);
+        if (isset($runner_factor)) {
+            $ruf_rating_middle_result->putRunnerFactor($history_race_runner->id, $runner_factor);
         }
     }
 
-    $race_runners = array_map(fn($race_rating) => $race_rating->race_runner, $ruf_ratings_result->history_race_ratings);
+
+    $race_runner_having_factors = RaceRunner::filterByRunnerIdSet($history_races_runners, $ruf_rating_middle_result->getAllRunnerIdSet());
 
 
+    //Now calculate the race factors
     //create a related race matrix for race factor calculation
-    $related_race_matrix = get_related_races_matrix($race_runners);
+    $related_race_matrix = get_related_races_matrix($race_runner_having_factors);
+    calculate_race_factors_for_all($ruf_rating_middle_result, $race_runner_having_factors, $related_race_matrix);
 
-    // calculate_race_factors_for_all($history_race_runners, $ruf_ratings_result->target_race);
-
-
-    return $ruf_ratings_result;
+    return $ruf_rating_middle_result;
 }
 
-function get_ruf_rating_for_race_runner(RaceRunner $race_runner, $length_per_furlong): RufRating
+
+function get_runner_factor(RaceRunner $race_runner, $length_per_furlong): ?float
 {
-
-
-    $ruf_rating = new RufRating();
-    $ruf_rating->race_runner = $race_runner;
-
-
     //if not run, no rating.
     if (!$race_runner->hasRunTheRace()) {
-        return $ruf_rating;
+        return null;
     }
 
     //weird distance from winner? no rating
     if (!$race_runner->isDistanceBeatMakingSense()) {
-        return $ruf_rating;
+        return null;
     }
 
     $race_distance_in_lengths = $race_runner->race->race_distance_furlongs * $length_per_furlong;
-    $ruf_rating->runner_factor = $race_distance_in_lengths / ($race_distance_in_lengths - $race_runner->total_distance_beat);
-    return $ruf_rating;
+    return $race_distance_in_lengths / ($race_distance_in_lengths - $race_runner->total_distance_beat);
 }
 
 
 /**
-
  * @return Map<RaceKey, RaceKey[]>
  */
 function get_related_races_matrix(array $race_runners): Map
 {
-
 
     $race_set = RaceRunner::extractRaces($race_runners);
 
@@ -151,10 +120,10 @@ function get_related_races_matrix(array $race_runners): Map
                 continue;
             }
 
-            $this_race_horse_set = RaceRunner::extractHorses(RaceRunner::filterByRaceKey($race_runners, $this_race -> race_key));
-            $that_race_horse_set = RaceRunner::extractHorses(RaceRunner::filterByRaceKey($race_runners, $that_race -> race_key));
+            $this_race_horse_set = RaceRunner::extractHorses(RaceRunner::filterByRaceKey($race_runners, $this_race->race_key));
+            $that_race_horse_set = RaceRunner::extractHorses(RaceRunner::filterByRaceKey($race_runners, $that_race->race_key));
 
-            if($this_race_horse_set->intersect($that_race_horse_set)){ //if two races share a horse, they are related
+            if ($this_race_horse_set->intersect($that_race_horse_set)) { //if two races share a horse,  then they are related
                 array_push($related_race_keys_for_this_race, $that_race->race_key);
             }
         }

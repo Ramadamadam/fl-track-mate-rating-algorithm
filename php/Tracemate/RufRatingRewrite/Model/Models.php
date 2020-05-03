@@ -116,6 +116,16 @@ class RaceRunner implements Hashable
         return array_filter($race_runners, fn($runner) => $runner->race->race_key->equals($race_key));
     }
 
+    public static function filterByRunnerIdSet(array $race_runners, Set $runner_id_set)
+    {
+        return array_filter($race_runners, fn($runner) => $runner_id_set->contains($runner->id));
+    }
+
+    public static function filterByHorseName(array $race_runners, $horse_name)
+    {
+        return array_filter($race_runners, fn($runner) => $runner->horse->horse_name == $horse_name);
+    }
+
     public function isDistanceBeatMakingSense(): bool
     {
         return isset($this->total_distance_beat) && $this->total_distance_beat >= 0;

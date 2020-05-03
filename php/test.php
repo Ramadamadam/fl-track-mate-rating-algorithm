@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/Tracemate/RufRatingRewrite/Algorithm/ruf_rating.php';
 
-use Trackmate\RufRatingRewrite\Algorithm\RufRatingsResult;
+use Trackmate\RufRatingRewrite\Algorithm\RufRatingMiddleResult;
 use Trackmate\RufRatingRewrite\Model\RaceKey;
 use function Trackmate\RufRatingRewrite\Algorithm\get_ruf_ratings_for_race_next_day;
 
@@ -24,7 +24,7 @@ $length_per_furlong = 82.5;
 
 $ruf_ratings_result = get_ruf_ratings_for_race_next_day($race_key, $race_dates_interval, $length_per_furlong);
 $target_race = $ruf_ratings_result->target_race;
-$ruf_ratings = $ruf_ratings_result->history_race_ratings;
+// $ruf_ratings = $ruf_ratings_result->runner_factor_map;
 ?>
 <h3>Target race: <?= $target_race -> race_name ?>, <?= $target_race->race_type ?> , <?= $target_race->race_class ?> , <?= $target_race->race_key->race_date ?> <?= $target_race->race_key->race_time ?>  </h3>
 
@@ -44,20 +44,20 @@ $ruf_ratings = $ruf_ratings_result->history_race_ratings;
     <td>Ruf Rating</td>
     </thead>
 
-    <?php foreach ($ruf_ratings as $rating) {
-
-        echo <<<EOT
-		<tr>		   
-		        
-		            <td>  {$rating->race_runner->horse->horse_name} </td>
-		            <td>  {$rating->race_runner->race->race_key} </td>
-		            <td>  {$rating->runner_factor} </td>
-		            <td>  TBD </td>
-		            <td>  TBD </td>
-		        </tr>
-EOT;
-    }
-
-    ?>
+<!--    --><?php //foreach ($ruf_ratings as $rating) {
+//
+//        echo <<<EOT
+//		<tr>
+//
+//		            <td>  {$rating->race_runner->horse->horse_name} </td>
+//		            <td>  {$rating->race_runner->race->race_key} </td>
+//		            <td>  {$rating->runner_factor} </td>
+//		            <td>  TBD </td>
+//		            <td>  TBD </td>
+//		        </tr>
+//EOT;
+//    }
+//
+//    ?>
 
 </table>
