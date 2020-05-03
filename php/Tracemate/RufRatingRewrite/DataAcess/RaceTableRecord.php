@@ -5,10 +5,16 @@ namespace Trackmate\RufRatingRewrite\DataAccess;
 
 require_once __DIR__ . '/../Model/Models.php';
 
+use Trackmate\RufRatingRewrite\Model\Horse;
 use Trackmate\RufRatingRewrite\Model\Race;
 use Trackmate\RufRatingRewrite\Model\RaceKey;
 use Trackmate\RufRatingRewrite\Model\RaceRunner;
 
+/**
+ *
+ * Class RaceTableRecord  Don't use this class directly for business. Convert it to domain models and then use the domain models
+ * @package Trackmate\RufRatingRewrite\DataAccess
+ */
 class RaceTableRecord
 {
     /**
@@ -306,6 +312,25 @@ class RaceTableRecord
      */
     public $silks;
 
+
+    /**
+
+     * @return RaceRunner
+     */
+    public  function toRaceRunner(): RaceRunner
+    {
+        $raceRunner = new RaceRunner();
+        $raceRunner->id = $this->id;
+        $raceRunner->horse = $this->toHorse();
+        $raceRunner->race = $this->toRace();
+
+        $raceRunner->placing_numerical = $this->placing_numerical;
+        $raceRunner->place = $this->place;
+
+        $raceRunner->total_distance_beat = $this->total_distance_beat;
+        return $raceRunner;
+    }
+
     /**
      * Extract runner recorders
      * @param array $single_race_table_records
@@ -314,12 +339,7 @@ class RaceTableRecord
     public static function extractRaceRunnersOfSingleRace(array $single_race_table_records): array
     {
         $raceRunners = array_map(function (RaceTableRecord $table_record) {
-            $raceRunner = new RaceRunner();
-            $raceRunner->horse_name = $table_record->horse_name;
-            $raceRunner->placing_numerical = $table_record->placing_numerical;
-            $raceRunner->place = $table_record->place;
-            $raceRunner->total_distance_beat = $table_record->total_distance_beat;
-            return $raceRunner;
+            return $table_record->toRaceRunner();
         }, $single_race_table_records);
 
         return $raceRunners;
@@ -328,14 +348,14 @@ class RaceTableRecord
 
 
 
-    public static function extractRace(RaceTableRecord $table_record): Race
+    private function toRace(): Race
     {
         $race = new Race();
-        $race->race_key = $table_record->toRaceKey();
-        $race->race_type = $table_record->race_type;
-        $race->race_name = $table_record->race_name;
-        $race->race_class = $table_record->race_class;
-        $race->race_distance_furlongs = $table_record->race_distance_furlongs;
+        $race->race_key = $this->toRaceKey();
+        $race->race_type = $this->race_type;
+        $race->race_name = $this->race_name;
+        $race->race_class = $this->race_class;
+        $race->race_distance_furlongs = $this->race_distance_furlongs;
         return $race;
     }
 
@@ -348,6 +368,15 @@ class RaceTableRecord
         $race_key->race_time = $this->race_time;
         return $race_key;
     }
+
+    private function toHorse()
+    {
+        $horse = new Horse();
+        $horse -> horse_name = $this -> horse_name;
+        return $horse;
+    }
+
+
 }
 
 

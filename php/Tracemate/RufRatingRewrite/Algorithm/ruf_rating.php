@@ -1,7 +1,8 @@
 <?php
 namespace Trackmate\RufRatingRewrite\Algorithm;
 
-use Trackmate\RufRatingRewrite\DataAccess\RaceTableRecord;
+use DateInterval;
+use Trackmate\RufRatingRewrite\DataAccess\PDODataAccess;
 use Trackmate\RufRatingRewrite\Model\Race;
 use Trackmate\RufRatingRewrite\Model\RaceKey;
 use Trackmate\RufRatingRewrite\Model\RaceRunner;
@@ -14,18 +15,29 @@ require_once __DIR__ . '/../Model/Models.php';
 require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
 
 
+class RufRatingsResult
+{
+    public ?Race $target_race = null;
+    public ?array $relatedRaceRatings = [];
+}
+
 /**
- * A horse's ruf rating in a single race
+ * A horse's ruf rating in a single race among related races
  */
 class RufRating
 {
     public RaceRunner $race_runner;
     public ?float $race_runner_factor = null;
+
+    public function isValid(): bool
+    {
+        return isset($this->race_runner_factor);
+    }
 }
 
 
 /**
- * Say there is a race tomorrow. Predict all horses' ruf ratings based each horse's racing record from [yesterday- days_back,  yesterday]
+ * Say there is a race tomorrow. Predict all horses' ruf ratings based each horse's racing record from [yesterday- race_dates_interval,  yesterday]
  * Corresponding Java code for the date range is
  *
  * Date periodEndDate = RacingHelper.getOffsetDate(raceDate, -2, Calendar.DATE);
@@ -33,50 +45,70 @@ class RufRating
  *
  *
  * @param RaceKey $race_key
- * @param int $days_back
- * @param float $length_per_furlong  How many lengths are there per furlong?
- * @return array|RufRating[]
+ * @param DateInterval $race_dates_interval such as "5 months"
+ * @param float $length_per_furlong How many lengths are there per furlong?
+ * @return RufRatingsResult
  */
-function get_ruf_ratings_for_race_next_day(RaceKey $race_key, int $days_back, float $length_per_furlong): array
+function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race_dates_interval, float $length_per_furlong): RufRatingsResult
 {
 
-    $this_race_table_records = get_table_records_by_race_key($race_key);
-    if (empty($this_race_table_records)) {
-        return [];
+    $dataAccess = new PDODataAccess();
+
+    $ruf_ratings_result = new RufRatingsResult();
+
+    $target_race_runners = $dataAccess->getRaceRunnersByRaceKey($race_key);
+    if (empty($target_race_runners)) {
+        return $ruf_ratings_result;
     }
 
-    $this_race_runners = RaceTableRecord::extractRaceRunnersOfSingleRace($this_race_table_records);
-    $this_race = RaceTableRecord::extractRace($this_race_table_records[array_key_first($this_race_table_records)]);
 
-    $ratings = [];
+    $ruf_ratings_result->target_race = $target_race_runners[array_key_first($target_race_runners)]->race;
+
+    $horses = RaceRunner::getAllHorses($target_race_runners);
+
+
+    //The java code's comment:  This will process the x days period up to and including yesterday (if processing ratings for tomorrow).
+    $end_date = date_sub($race_key->getRaceDateAsDateType(), DateInterval::createFromDateString("2 days"));
+    $start_date = clone $end_date;
+    date_sub($start_date, $race_dates_interval);
+
+    $related_race_runners = $dataAccess->getRaceRunnersByHorsesBetween($start_date, $end_date, $horses);
+
+
+
     //calculate for each runner
-    foreach ($this_race_runners as $race_runner) {
-        $ruf_rating = get_ruf_rating_for_race_runner($race_runner, $this_race, $length_per_furlong);
-        array_push($ratings, $ruf_rating);
+    foreach ($related_race_runners as $related_race_runner) {
+        $ruf_rating = get_ruf_rating_for_race_runner($related_race_runner, $ruf_ratings_result->target_race, $length_per_furlong);
+        if ($ruf_rating->isValid()) {
+            array_push($ruf_ratings_result->relatedRaceRatings, $ruf_rating);
+        }
     }
-    return $ratings;
+    return $ruf_ratings_result;
 }
 
-function get_ruf_rating_for_race_runner(RaceRunner $race_runner, Race $race, $length_per_furlong): RufRating
+function get_ruf_rating_for_race_runner(RaceRunner $related_race_runner, Race $race, $length_per_furlong): RufRating
 {
+
+
     $ruf_rating = new RufRating();
-    $ruf_rating->race_runner = $race_runner->horse_name;
+    $ruf_rating->race_runner = $related_race_runner;
 
 
     //if not run, no rating.
-    if (!$race_runner->hasRunTheRace()) {
+    if (!$related_race_runner->hasRunTheRace()) {
         return $ruf_rating;
     }
 
     //weird distance from winner? no rating
-    if (!$race_runner->isDistanceBeatMakingSense()) {
+    if (!$related_race_runner->isDistanceBeatMakingSense()) {
         return $ruf_rating;
     }
 
     $race_distance_in_lengths = $race->race_distance_furlongs * $length_per_furlong;
-    $ruf_rating->race_runner_factor = $race_distance_in_lengths / ($race_distance_in_lengths - $race_runner->total_distance_beat);
+    $ruf_rating->race_runner_factor = $race_distance_in_lengths / ($race_distance_in_lengths - $related_race_runner->total_distance_beat);
     return $ruf_rating;
 }
+
 
 ?>
 
