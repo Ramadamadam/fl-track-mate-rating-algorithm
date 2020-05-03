@@ -339,19 +339,20 @@ class RaceTableRecord
     {
         $race = new Race();
         $race->race_key = $table_record->toRaceKey();
+        $race->race_type = $table_record->race_type;
+        $race->race_name = $table_record->race_name;
+        $race->race_class = $table_record->race_class;
         $race->race_distance_furlongs = $table_record->race_distance_furlongs;
         return $race;
     }
 
 
-    public function toRaceKey(): RaceKey
+    private function toRaceKey(): RaceKey
     {
         $race_key = new RaceKey();
-        $race_key->race_type = $race_key->race_type;
-        $race_key->race_name = $race_key->race_name;
-        $race_key->race_class = $race_key->race_class;
-        $race_key->race_date = $race_key->race_date;
-        $race_key->race_time = $race_key->race_time;
+        $race_key->track_name = $this->track_name;
+        $race_key->race_date = $this->race_date;
+        $race_key->race_time = $this->race_time;
         return $race_key;
     }
 }

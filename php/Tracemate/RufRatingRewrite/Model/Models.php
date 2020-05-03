@@ -7,23 +7,19 @@ namespace Trackmate\RufRatingRewrite\Model;
  */
 class RaceKey
 {
-
-
-    public ?string $race_type = null;
-
-
-    public ?string $race_name = null;
-
-
-
-    public ?string $race_class = null;
-
-
-
+    public ?string $track_name = null;
     public ?string $race_date = null;
-
     public ?string $race_time = null;
 
+}
+
+class Race
+{
+    public RaceKey $race_key;
+    public ?string $race_type = null;
+    public ?string $race_name = null;
+    public ?string $race_class = null;
+    public ?float $race_distance_furlongs = null;
 }
 
 
@@ -63,9 +59,5 @@ class RaceRunner
 }
 
 
-class Race
-{
-    public RaceKey $race_key;
-    public ?float $race_distance_furlongs = null;
-}
+
 ?>

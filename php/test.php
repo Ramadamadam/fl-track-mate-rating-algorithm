@@ -15,9 +15,7 @@ use function Trackmate\RufRatingRewrite\Algorithm\get_ruf_ratings_for_race_next_
 <?php
 
 $race_key = new RaceKey();
-$race_key->race_type = 'Handicap';
-$race_key->race_name = 'Bet toteplacepot At totesport.com Amateur Riders Handicap (Div 1)';
-$race_key->race_class = 'Class 5';
+$race_key->track_name = 'Chelmsford City';
 $race_key->race_date = '2019-03-15';
 $race_key->race_time = '16:40:00';
 

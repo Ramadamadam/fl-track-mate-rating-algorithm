@@ -4,14 +4,13 @@
 title New Code Flow
 note
  Input:  An upcoming race's key + Last X days for calculation
-Output:  Ruf rating for every running record during the period (running record = combination of horse + race)
+Output:  Ruf rating for every Runner during the period (Runner = combination of horse + race)
 end note
 
-
 :Get all the horses for this race;
-:Get all the running records the horses were in;
-repeat: pick a horse and its running records
-:Calculate the runner factor for every running record;
+:Get all the runners the horses were in;
+repeat: pick a horse and its runners
+:Calculate the runner factor for every runner;
 repeat while (more data?) is (yes)
 ->no;
 
