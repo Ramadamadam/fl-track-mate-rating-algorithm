@@ -355,7 +355,7 @@ class RaceTableRecord
         $race->race_type = $this->race_type;
         $race->race_name = $this->race_name;
         $race->race_class = $this->race_class;
-        $race->race_distance_furlongs = $this->race_distance_furlongs;
+        $race->race_distance_adjusted_in_yards = $this->yards + $this->rail_move;
         return $race;
     }
 

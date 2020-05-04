@@ -51,7 +51,8 @@ class Race implements Hashable
     public ?string $race_type = null;
     public ?string $race_name = null;
     public ?string $race_class = null;
-    public ?float $race_distance_furlongs = null;
+
+    public ?int $race_distance_adjusted_in_yards = null;
 
     function hash()
     {

@@ -27,10 +27,9 @@ require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
  *
  * @param RaceKey $race_key
  * @param DateInterval $race_dates_interval such as "5 months"
- * @param float $length_per_furlong How many lengths are there per furlong?
  * @return RufRatingMiddleResult|null  Null if the race doesn't exist
  */
-function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race_dates_interval, float $length_per_furlong): ?RufRatingFinalResult
+function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race_dates_interval): ?RufRatingFinalResult
 {
 
     $dataAccess = new PDODataAccess();
@@ -61,7 +60,7 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
 
     //calculate runner-factor for each runner
     foreach ($history_races_runners as $history_race_runner) {
-        $runner_factor = get_runner_factor($history_race_runner, $length_per_furlong);
+        $runner_factor = get_runner_factor($history_race_runner);
         if (isset($runner_factor)) {
             $ruf_rating_middle_result->putRunnerFactor($history_race_runner->id, $runner_factor);
         }
@@ -100,7 +99,7 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
 }
 
 
-function get_runner_factor(RaceRunner $race_runner, $length_per_furlong): ?float
+function get_runner_factor(RaceRunner $race_runner): ?float
 {
     //if not run, no rating.
     if (!$race_runner->hasRunTheRace()) {
@@ -112,8 +111,11 @@ function get_runner_factor(RaceRunner $race_runner, $length_per_furlong): ?float
         return null;
     }
 
-    $race_distance_in_lengths = $race_runner->race->race_distance_furlongs * $length_per_furlong;
-    return $race_distance_in_lengths / ($race_distance_in_lengths - $race_runner->total_distance_beat);
+    $feet_per_length = 8;
+    $feet_per_yards = 3;
+
+    $race_distance_in_feet = $race_runner->race->race_distance_adjusted_in_yards * $feet_per_yards;
+    return $race_distance_in_feet / ($race_distance_in_feet - $race_runner->total_distance_beat * $feet_per_length);
 }
 
 
