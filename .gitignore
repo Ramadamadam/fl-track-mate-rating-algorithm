@@ -25,3 +25,4 @@ hs_err_pid*
 /track-mate-rating-algorithm.iml
 /php/vendor/
 /php/dbToPhp.cfg.php
+/php/composer.lock

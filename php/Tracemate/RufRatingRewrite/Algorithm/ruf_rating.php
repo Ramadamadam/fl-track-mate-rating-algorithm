@@ -3,7 +3,7 @@ namespace Trackmate\RufRatingRewrite\Algorithm;
 
 use DateInterval;
 use Ds\Map;
-use Trackmate\RufRatingRewrite\DataAccess\PDODataAccess;
+use Trackmate\RufRatingRewrite\DataAccess\RufRatingDataAccess;
 use Trackmate\RufRatingRewrite\Model\Race;
 use Trackmate\RufRatingRewrite\Model\RaceKey;
 use Trackmate\RufRatingRewrite\Model\RaceRunner;
@@ -14,7 +14,7 @@ require_once __DIR__ . '/../Model/Models.php';
 
 require_once __DIR__ . '/ruf_rating_result.php';
 require_once __DIR__ . '/ruf_rating_race_factor_calc.php';
-require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
+require_once __DIR__ . '/../DataAcess/RufRatingDataAccess.php';
 
 
 /**
@@ -32,7 +32,7 @@ require_once __DIR__ . '/../DataAcess/PDODataAccess.php';
 function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race_dates_interval): ?RufRatingFinalResult
 {
 
-    $dataAccess = new PDODataAccess();
+    $dataAccess = new RufRatingDataAccess();
 
 
     //get runners related to the target race

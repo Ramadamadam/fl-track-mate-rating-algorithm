@@ -4,18 +4,34 @@
 title New Code Flow
 note
  Input:  An target race's key + Last X days for calculation
-Output:  Ruf rating for every Runner during the period (Runner = combination of horse + race)
+Output:  Ruf rating for every Runner during the period
 end note
 
-:Get all the horses for this race;
-:Get all the runners the horses were in;
-:Filter out runners that are not compatible with the target race;
+:Get all the horses for target race;
+:Get all the runners the horses were in during the period;
+note right
+Filter out races that are not compatible with the target race's type;
+end note
 repeat: pick a horse and its runners
 :Calculate the runner factor for every runner;
 repeat while (more data?) is (yes)
 ->no;
-:Calculate race factors in a big chunk function;
+:Find out related races for every race;
+note right
+1. two races are related if they share a horse
+2. incompatible races won't be related
+end note
+:Calculate all race factors in a big chunk function;
+repeat: pick a runner
+:ruf_rating = runner_factor * race_factor;
+repeat while (more data?) is (yes)
 
+:output all the runners and their runner factors;
+
+#HotPink:calculate avg/best/worst/last ruf ratings for a horse;
+note right
+Not implemented in this project
+end note
 
 stop
 

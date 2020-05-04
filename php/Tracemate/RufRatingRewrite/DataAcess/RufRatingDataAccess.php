@@ -10,7 +10,7 @@ use Trackmate\RufRatingRewrite\Model\RaceRunner;
 require_once __DIR__ . '/../Model/Models.php';
 require_once __DIR__ . '/RaceTableRecord.php';
 
-class PDODataAccess
+class RufRatingDataAccess
 {
 
     /**
