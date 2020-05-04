@@ -13,11 +13,26 @@ use function Trackmate\RufRatingRewrite\Algorithm\get_ruf_ratings_for_race_next_
 <?php
 
 $race_key = new RaceKey();
-$race_key->track_name = 'Chelmsford City';
-$race_key->race_date = '2019-03-15';
-$race_key->race_time = '16:40:00';
+$race_key->track_name = $_GET["track_name"]; // such as  'Chelmsford City';
+$race_key->race_date = $_GET["race_date"];   // such as '2019-03-15';
+$race_key->race_time = $_GET["race_time"];   // such as '16:40:00';
+$race_dates_interval_str = $_GET["race_dates_interval"];   //such as "6 months";
 
-$race_dates_interval = DateInterval::createFromDateString("6 month");
+
+if(empty($race_key->track_name) or empty($race_key->race_date) or empty($race_key->race_time) or empty($race_dates_interval_str)){
+    echo "<p>Need parameters: track_name, race_date, race_time, race_dates_interval</p>";
+    echo "<p><a href='/test.php?track_name=Chelmsford%20City&race_date=2019-03-15&race_time=16:40:00&race_dates_interval=6%20months'> Example Url</a></p>";
+    return;
+}
+
+
+$race_dates_interval = DateInterval::createFromDateString($race_dates_interval_str);
+
+
+
+
+
+
 
 $ruf_rating_final_result = get_ruf_ratings_for_race_next_day($race_key, $race_dates_interval);
 $target_race = $ruf_rating_final_result->target_race;
