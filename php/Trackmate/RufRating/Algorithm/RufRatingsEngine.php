@@ -8,10 +8,12 @@ require_once __DIR__ . '/../DataAccess/RufRatingDataAccess.php';
 
 require_once __DIR__ . '/RufRatingsRace.php';
 require_once __DIR__ . '/RufRatingsRunner.php';
+require_once __DIR__ . '/RunnerRufRating.php';
 
 use DateInterval;
 use DateTime;
 use Ds\Map;
+use Ds\Vector;
 use Trackmate\RufRating\DataAccess\RufRatingDataAccess;
 use Trackmate\RufRating\Model\IRace;
 use Trackmate\RufRating\Model\IRunner;
@@ -31,12 +33,13 @@ class RufRatingsEngine
 
 
     /**
-     *
+     * For an upcoming day, predict all horses' ruf ratings based each horse's racing record from [yesterday- race_dates_interval,  yesterday]
      *
      * @param DateInterval $raceDatesInterval such as "5 months" or "100 days"
      * @param debug if true, echo debug information on page
+     * @return an array of RunnerRufRating
      */
-    public function processRacesForDate(DateTime $raceDate, DateInterval $raceDatesInterval, bool $debug)
+    public function processRacesForUpcomingDay(DateTime $raceDate, DateInterval $raceDatesInterval, bool $debug): array
     {
         // This will process the x month period up to and including yesterday (if processing ratings for tomorrow).
 
@@ -69,10 +72,10 @@ class RufRatingsEngine
 
         // Build up all related races.
         //// raceKey => array of related race keys
-        $relatedRaceKeys = new Map();
+        $relatedRatingRaceMap = new Map();
         // horseName => array of RufRatingsRace
         $horseRaceRatings = new Map();
-        $this->getRelatedRaces($ratingsRaces, $relatedRaceKeys, $horseRaceRatings);
+        $this->getRelatedRaces($ratingsRaces, $relatedRatingRaceMap, $horseRaceRatings);
 
 
         //////
@@ -81,26 +84,41 @@ class RufRatingsEngine
         if ($debug) {
             echo "Calculating race factors for " . count($ratingsRaces) . " Races.";
         }
-        $this->calculateRaceFactors($ratingsRaces, $relatedRaceKeys, $debug);
+        $this->calculateRaceFactors($ratingsRaces, $relatedRatingRaceMap, $debug);
 
         if ($debug) {
             echo "Race factor calculation complete (100%)";
         }
 
 
-//
-//    //////
-//    // Store the ratings.
-//    //////
-//    try {
-//        storeRatings(racesForDate, ratingsTypeId, ratingsRaceValidityChecker, horseRaceRatings, ratingsRaces, racingService, ratingsService,
-//            debug);
-//    } catch (Exception e) {
-//    logger.error("Failed to store ratings for date: " + raceDate, e);
-//    //marketUnsuccessfulDates.add(raceDate);
-//    return;
-//}
-//     return null;
+        //collect the result
+        $runnerRufRatingArray = [];
+        foreach ($runnerFactors->pairs() as $runnerFactorEntry) {
+            $runnerId = $runnerFactorEntry->key;
+            $runnerFactorValue = $runnerFactorEntry->value;
+
+            /** @var IRunner $runner */
+            $runner = current(array_filter($periodRunners, fn($pn) => $pn->id == $runnerId));
+            if (!$runner) {
+                continue;
+            }
+
+            /** @var RufRatingsRace $rufRatingRace */
+            $rufRatingRace = $ratingsRaces->get($runner->race->race_key, null);
+            if (!$rufRatingRace) {
+                continue;
+            }
+
+            $runnerRufRating = new RunnerRufRating();
+            $runnerRufRating->runner = $runner;
+            $runnerRufRating->runnerFactor = $runnerFactorValue;
+            $runnerRufRating->raceFactor = $rufRatingRace->getFactor();
+            $runnerRufRating->rating = $runnerRufRating->runnerFactor * $runnerRufRating->raceFactor;
+
+            array_push($runnerRufRatingArray, $runnerRufRating);
+        }
+        return $runnerRufRatingArray;
+
     }
 
 
@@ -176,7 +194,7 @@ class RufRatingsEngine
      */
     private function getRelatedRaces(Map $ratingsRaces, Map $relatedRatingsRaceMap, Map $horseRaceRatingsMap)
     {
-        // horse name -> array of Race keys
+        // horse name -> vector of Race keys
         $horseAndTheirRaceKeys = new Map(); //Jian: horse and the races they have been really in
         // Get a map of all races each horse has been in.
         /**  @var $ratingsRace RufRatingsRace */
@@ -186,10 +204,10 @@ class RufRatingsEngine
             foreach ($rufRatingsRunnersMap->keys() as $horseName) {
                 $horseRaceKeys = $horseAndTheirRaceKeys->get($horseName, null);
                 if ($horseRaceKeys == null) {
-                    $horseRaceKeys = [];
+                    $horseRaceKeys = new Vector();  //don't use array because arrays are passed in value as a parameter of map->put();
                     $horseAndTheirRaceKeys->put($horseName, $horseRaceKeys);
                 }
-                array_push($horseRaceKeys, $ratingsRace->getRaceKey());
+                $horseRaceKeys->push($ratingsRace->getRaceKey());
             }
         }
 
@@ -197,7 +215,7 @@ class RufRatingsEngine
         foreach ($ratingsRaces->values() as $ratingsRace) {
             $relatedRaces = $relatedRatingsRaceMap->get($ratingsRace->getRaceKey(), null);  //Jian: initialise the the map of relatedRaceIds - start
             if ($relatedRaces == null) {
-                $relatedRaces = [];
+                $relatedRaces = new Vector(); //don't use array because arrays are passed in value as a parameter of map->put();
                 $relatedRatingsRaceMap->put($ratingsRace->getRaceKey(), $relatedRaces);
             } //Jian: initialise the the map of relatedRaceIds - end
 
@@ -211,7 +229,7 @@ class RufRatingsEngine
                         $thisRaceType = $ratingsRace->getFullRaceType();
                         $relatedRaceType = $ratingsRaces->get($raceKey)->getFullRaceType();
                         if ($this->isCompatibleRaceType($thisRaceType, $relatedRaceType)) {
-                            array_push($relatedRaces, $raceKey);
+                            $relatedRaces->push($raceKey);
                         }
                     }
                 }
@@ -221,12 +239,12 @@ class RufRatingsEngine
             if (count($relatedRaces) > 0) {
 
                 foreach ($ratingsRace->getRunners()->values() as $ratingsRunner) {
-                    $horseRaceKeys = $horseRaceRatingsMap->get($ratingsRunner->getHorseName());
+                    $horseRaceKeys = $horseRaceRatingsMap->get($ratingsRunner->getHorseName(), null);
                     if ($horseRaceKeys == null) {
-                        $horseRaceKeys = [];
+                        $horseRaceKeys = new Vector(); //don't use array because arrays are passed in value as a parameter of map->put();
                         $horseRaceRatingsMap->put($ratingsRunner->getHorseName(), $horseRaceKeys);
                     }
-                    $horseRaceKeys->add($ratingsRace);
+                    $horseRaceKeys->push($ratingsRace);
                 }
             }
         }
@@ -266,7 +284,7 @@ class RufRatingsEngine
                     for ($tmpFactor = $startFactor; $tmpFactor <= $endFactor; $tmpFactor += $incrementSize) {
                         $distanceBetweenRaces = 0;
                         /** @var  $relatedRaceKeys array */
-                        $relatedRaceKeys = $relatedRatingRaceMap->get($ratingsRace->getRaceKey());
+                        $relatedRaceKeys = $relatedRatingRaceMap->get($ratingsRace->getRaceKey(), null);
                         if ($relatedRaceKeys == null) {
                             continue;
                         }
@@ -286,12 +304,12 @@ class RufRatingsEngine
                             /** @var  $runnersOfOneRace map , value type RufRatingsRunner */
                             $runnersOfOneRace = $ratingsRace->getRunners();
                             foreach ($runnersOfOneRace->pairs() as $ratingsRunnerEntry) {
-                                $horseName = $ratingsRunnerEntry->getKey();
+                                $horseName = $ratingsRunnerEntry->key;
                                 /** @var  $ratingsRunner RufRatingsRunner */
-                                $ratingsRunner = $ratingsRunnerEntry->getValue();
+                                $ratingsRunner = $ratingsRunnerEntry->value;
 
-                                /** @var  $relatedRunner RufRatingsRunner */
-                                $relatedRunner = $relatedRace->getRunner($horseName);
+                                /** @var  RufRatingsRunner $relatedRunner  */
+                                $relatedRunner = $relatedRace->getRunners()->get($horseName, null);
                                 if ($relatedRunner != null) {
                                     $runnerRating = $ratingsRunner->getRating() * $tmpFactor;
                                     $relatedRunnerRating = $relatedRunner->getRating() * $relatedRace->getFactor();
