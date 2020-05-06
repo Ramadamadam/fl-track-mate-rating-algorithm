@@ -15,8 +15,6 @@ use Ds\Map;
 use Trackmate\RufRating\DataAccess\RufRatingDataAccess;
 use Trackmate\RufRating\Model\IRace;
 use Trackmate\RufRating\Model\IRunner;
-use Trackmate\RufRating\Algorithm\RufRatingsRace;
-use Trackmate\RufRating\Algorithm\RufRatingsRunner;
 
 
 class RufRatingsEngine
@@ -51,22 +49,24 @@ class RufRatingsEngine
         $runnerFactors = new Map();  //runner id -> float value
         $ratingsRaces = new Map(); // Long, RufRatingsRace // race key -> RufRatingsRace
 
-        $this -> getRunnerFactorsAndRatingsRaces($periodRaces, $periodRunners, $runnerFactors, $ratingsRaces);
+        $this->getRunnerFactorsAndRatingsRaces($periodRaces, $periodRunners, $runnerFactors, $ratingsRaces);
 
-        if($debug){
+        if ($debug) {
             echo "<p>The runner factors are: </p>";
             echo "<pre>";
             var_dump($runnerFactors);
             echo "</pre>";
         }
-//
-//    //////
-//    // Build up all related races.
-//    //////
-//    Map<Long, Collection<Long>> relatedRaceIds = new HashMap<Long, Collection<Long>>();
-//    Map<Long, Collection<RufRatingsRace>> horseRaceRatings = new HashMap<Long, Collection<RufRatingsRace>>();
-//    getRelatedRaces(ratingsRaces, relatedRaceIds, horseRaceRatings);
-//
+
+        // Build up all related races.
+        //// raceKey => array of related race keys
+        $relatedRaceKeys = new Map();
+        // horseName => array of RufRatingsRace
+        $horseRaceRatings = new Map();
+        $this->getRelatedRaces($ratingsRaces, $relatedRaceKeys, $horseRaceRatings);
+
+
+
 //    //////
 //    // Calculate the RaceFactors
 //    //////
@@ -115,7 +115,6 @@ class RufRatingsEngine
             $ratingsRace->setFullRaceType($fullRaceType);
 
 
-
             // Get all runners for the race.
             $raceRunners = IRunner::filterByRaceKey($periodRunners, $periodRace->race_key);
 
@@ -157,12 +156,82 @@ class RufRatingsEngine
 
 
             if (count($ratingsRace->getRunners()) > 0) {
-                $ratingsRaces ->put($ratingsRace->getRaceKey(), $ratingsRace);
+                $ratingsRaces->put($ratingsRace->getRaceKey(), $ratingsRace);
             }
         }
     }
 
+    /**
+     *  Build up the map of related races for each race. Also build up the map of races each horse was involved in.
+     * @param $ratingsRaces The map of RufRatingsRaces, keyed on race ID.
+     * @param $relatedRatingsRaceMap The map of Collections of RufRatingsRaces, keyed on race key.   Jian: output parameter
+     * @param $horseRaceRatingsMap The map of Collections of RufRatingsRaces, keyed on horse ID. Jian: output parameter
+     */
+    private function getRelatedRaces(Map $ratingsRaces, Map $relatedRatingsRaceMap, Map $horseRaceRatingsMap)
+    {
+        // horse name -> array of Race keys
+        $horseAndTheirRaceKeys = new Map(); //Jian: horse and the races they have been really in
+        // Get a map of all races each horse has been in.
+        /**  @var $ratingsRace RufRatingsRace */
+        foreach ($ratingsRaces->values() as $ratingsRace) {
+            //horse name => RufRatingsRunner
+            $rufRatingsRunnersMap = $ratingsRace->getRunners(); //key: horseName
+            foreach ($rufRatingsRunnersMap->keys() as $horseName) {
+                $horseRaceKeys = $horseAndTheirRaceKeys->get($horseName, null);
+                if ($horseRaceKeys == null) {
+                    $horseRaceKeys = [];
+                    $horseAndTheirRaceKeys->put($horseName, $horseRaceKeys);
+                }
+                array_push($horseRaceKeys, $ratingsRace->getRaceKey());
+            }
+        }
 
+        /** @var  $ratingsRace RufRatingsRace */
+        foreach ($ratingsRaces->values() as $ratingsRace) {
+            $relatedRaces = $relatedRatingsRaceMap->get($ratingsRace->getRaceKey(), null);  //Jian: initialise the the map of relatedRaceIds - start
+            if ($relatedRaces == null) {
+                $relatedRaces = [];
+                $relatedRatingsRaceMap->put($ratingsRace->getRaceKey(), $relatedRaces);
+            } //Jian: initialise the the map of relatedRaceIds - end
+
+            /** @var  $ratingsRunner RufRatingsRunner */
+            foreach ($ratingsRace->getRunners()->values() as $ratingsRunner) { //Jian: for each race, loop thru its runners
+                $raceKeys = $horseAndTheirRaceKeys->get($ratingsRunner->getHorseName()); //Jian: get all races this horse has been in
+                foreach ($raceKeys as $raceKey) {
+                    if (!$raceKey->equals($ratingsRace->getRaceKey()) //Jian:  not the same race
+                        && !$relatedRaces->contains($raceKey)) { //Jian: the race hasn't been included to result map yet
+                        // If the 2 races are compatible then make a note of the relationship.
+                        $thisRaceType = $ratingsRace->getFullRaceType();
+                        $relatedRaceType = $ratingsRaces->get($raceKey)->getFullRaceType();
+                        if ($this->isCompatibleRaceType($thisRaceType, $relatedRaceType)) {
+                            array_push($relatedRaces, $raceKey);
+                        }
+                    }
+                }
+            }
+
+            // If this race has related races, then make a note that all the horses ran in this race->
+            if (count($relatedRaces) > 0) {
+
+                foreach ($ratingsRace->getRunners()->values() as $ratingsRunner) {
+                    $horseRaceKeys = $horseRaceRatingsMap->get($ratingsRunner->getHorseName());
+                    if ($horseRaceKeys == null) {
+                        $horseRaceKeys = [];
+                        $horseRaceRatingsMap->put($ratingsRunner->getHorseName(), $horseRaceKeys);
+                    }
+                    $horseRaceKeys->add($ratingsRace);
+                }
+            }
+        }
+
+    }
+
+
+    private function isCompatibleRaceType(?string $thisRaceType, ?string $relatedRaceType)
+    {
+        //TODO: always return true for now
+        return true;
+    }
 }
 
 ?>
