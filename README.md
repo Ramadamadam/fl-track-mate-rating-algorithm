@@ -52,3 +52,13 @@ Steps:
   * It's using PDO.  You can rewrite it with $wpdb
   * Or you can just update the db credentials there and keep using this file. Up to you.
 * Call ```function get_ruf_ratings_for_race_next_day()``` inside ruf_rating.php . Please read the phpdoc of this function.
+
+
+
+## Final notes
+* It may cause performance issue if you enable xdebug
+* A hidden algorithm: 
+  * The master branch is a neater version of the algorithm, which means you can get the ratings on the fly, when a race card is requested in browser. 
+  * Branch 'blindly-copy-java-code' implements the algorithm in the EXACT the same way the java code does.
+    * But it takes very long because it loads much more data
+    * It can only be done as a scheduled job:  Run the job, save the results into database, and request a slice of the data with horseNames in browser 
