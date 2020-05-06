@@ -41,6 +41,9 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
     $incrementSize = RACE_RATINGS_START_INCREMENT_SIZE;
     for ($iteration = 0; $iteration < RACE_RATINGS_NUM_ITERATIONS; $iteration++) {
 
+        echo "Race factor calculation iteration " . ($iteration + 1) . " / " . RACE_RATINGS_NUM_ITERATIONS;
+
+
         //original java comment:  While overall difference is reducing, continue this $iteration.
         $smallestDistanceBetweenAllRaces = PHP_FLOAT_MAX; //type is double in the legacy java code
         $distanceImproving = true; //type is boolean in the legacy java code
@@ -60,7 +63,7 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
                 $bestFactor = $iterationStartFactor; //type is double in the legacy java code
                 $smallestDistanceBetweenRaces = PHP_FLOAT_MAX; //type is double in the legacy java code
 
-                echo "<pre>"." ".$iterationStartFactor." ".$rangeAdjust." ".$startFactor." ".$endFactor." ".$bestFactor." ".$smallestDistanceBetweenRaces."</pre>";
+                echo "<pre>".$this_race_key->track_name. "  ".$iterationStartFactor." ".$rangeAdjust." ".$startFactor." ".$endFactor." ".$bestFactor." ".$smallestDistanceBetweenRaces.' '.$distanceBetweenAllRaces. "</pre>";
 
 
                 for ($tmpFactor = $startFactor; $tmpFactor <= $endFactor; $tmpFactor += $incrementSize) {
@@ -91,6 +94,10 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
 
                             $this_race_runner_factor = $ruf_rating_middle_result->getRunnerFactorByRunnerId($this_race_runner->id);
                             $related_race_runner_factor = $ruf_rating_middle_result->getRunnerFactorByRunnerId($related_race_runner_with_same_horse->id);
+
+                            if (!$this_race_runner_factor || !$related_race_runner_factor) {
+                                continue;
+                            }
 
                             $runnerRating = $this_race_runner_factor * $tmpFactor; //type is double in the legacy java code
                             $relatedRunnerRating = $related_race_runner_factor * $ruf_rating_middle_result->getRaceFactorByRaceKey($related_race_runner_with_same_horse->race->race_key); //type is double in the legacy java code
@@ -123,7 +130,7 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
             // The time saving is ~25% runtime when rating the UK for 2009-09-13.
 
             if ($distanceBetweenAllRaces < $smallestDistanceBetweenAllRaces && (($smallestDistanceBetweenAllRaces - $distanceBetweenAllRaces) > 0.0005)) {
-
+                echo "New smallest distance (incrementSize = " . $incrementSize . "): " . $distanceBetweenAllRaces;
                 $smallestDistanceBetweenAllRaces = $distanceBetweenAllRaces;
             } else {
                 $distanceImproving = false;
@@ -132,6 +139,8 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
 
         // Reduce the increment size to tune the factor more finely in future iterations.
         $incrementSize *= RACE_RATINGS_INCREMENT_REDUCTION_FACTOR;
+
+        echo "<hr/>";
     }
 
 }

@@ -84,6 +84,6 @@ class RufRatingMiddleResult
 
     public function getRunnerFactorByRunnerId($runner_id): ?float
     {
-        return $this->runner_factor_map->get($runner_id);
+        return $this->runner_factor_map->get($runner_id, null);
     }
 }
