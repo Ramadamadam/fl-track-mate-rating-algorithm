@@ -30,22 +30,24 @@ use function Trackmate\RufRatingRewrite\DataAccess\get_table_records_by_race_key
 function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle_result, array $all_race_runners, Map $related_race_matrix): void
 {
 
-    //set the values as 0 at first
+    //set the values as 1 at first
     $all_race_set = RaceRunner::extractRaces($all_race_runners);
     foreach ($all_race_set as $race){
         $ruf_rating_middle_result -> putRaceFactor($race -> race_key, 1);
     }
 
+    // var_dump($ruf_rating_middle_result->getRaceFactorMap());
 
     $incrementSize = RACE_RATINGS_START_INCREMENT_SIZE;
     for ($iteration = 0; $iteration < RACE_RATINGS_NUM_ITERATIONS; $iteration++) {
 
         //original java comment:  While overall difference is reducing, continue this $iteration.
         $smallestDistanceBetweenAllRaces = PHP_FLOAT_MAX; //type is double in the legacy java code
-        $distanceImproving = true; //type is boolean in boolean legacy java code
+        $distanceImproving = true; //type is boolean in the legacy java code
         while ($distanceImproving) {
 
             $distanceBetweenAllRaces = 0; //type is double in the legacy java code
+
             foreach ($ruf_rating_middle_result->getRaceFactorMap()->pairs() as $race_key_and_race_factor) {  //type is RufRatingsRace, name is "ratingsRace" in the legacy java code
 
                 $this_race_key = $race_key_and_race_factor->key;
@@ -57,7 +59,12 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
                 $endFactor = $iterationStartFactor + $rangeAdjust; //type is double in the legacy java code
                 $bestFactor = $iterationStartFactor; //type is double in the legacy java code
                 $smallestDistanceBetweenRaces = PHP_FLOAT_MAX; //type is double in the legacy java code
+
+                echo "<pre>"." ".$iterationStartFactor." ".$rangeAdjust." ".$startFactor." ".$endFactor." ".$bestFactor." ".$smallestDistanceBetweenRaces."</pre>";
+
+
                 for ($tmpFactor = $startFactor; $tmpFactor <= $endFactor; $tmpFactor += $incrementSize) {
+                    // echo "<pre>".$startFactor.' '.$endFactor.' '.$incrementSize.' '.$tmpFactor."</pre>";
 
                     $distanceBetweenRaces = 0; //type is double in the legacy java code
                     $relatedRaceKeysCol = $related_race_matrix->get($this_race_key); //type is Collection < Long>  in the legacy java code

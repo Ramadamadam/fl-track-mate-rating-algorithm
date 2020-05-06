@@ -1,5 +1,6 @@
 <?php
 
+
 require_once __DIR__ . '/Tracemate/RufRatingRewrite/Algorithm/ruf_rating.php';
 
 use Trackmate\RufRatingRewrite\Model\RaceKey;
