@@ -20,7 +20,7 @@ class RufRatingDataAccess
      */
     public function getRaceRunnersByRaceKey(RaceKey $race_key): array
     {
-        return RaceTableRecord::extractRaceRunnersOfSingleRace($this->getTableRecordsByRaceKey($race_key));
+        return RaceTableRecord::extractRaceRunners($this->getTableRecordsByRaceKey($race_key));
     }
 
 
@@ -58,7 +58,7 @@ class RufRatingDataAccess
             $stmt->execute($params);
 
             $table_records =  $stmt->fetchAll(PDO::FETCH_CLASS, RaceTableRecord::class);
-            return RaceTableRecord::extractRaceRunnersOfSingleRace($table_records);
+            return RaceTableRecord::extractRaceRunners($table_records);
         } finally {
             $pdo = null;
         }

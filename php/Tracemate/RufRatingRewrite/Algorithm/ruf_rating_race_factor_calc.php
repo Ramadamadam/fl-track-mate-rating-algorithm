@@ -41,7 +41,7 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
     $incrementSize = RACE_RATINGS_START_INCREMENT_SIZE;
     for ($iteration = 0; $iteration < RACE_RATINGS_NUM_ITERATIONS; $iteration++) {
 
-        echo "Race factor calculation iteration " . ($iteration + 1) . " / " . RACE_RATINGS_NUM_ITERATIONS;
+        // echo "Race factor calculation iteration " . ($iteration + 1) . " / " . RACE_RATINGS_NUM_ITERATIONS;
 
 
         //original java comment:  While overall difference is reducing, continue this $iteration.
@@ -63,7 +63,7 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
                 $bestFactor = $iterationStartFactor; //type is double in the legacy java code
                 $smallestDistanceBetweenRaces = PHP_FLOAT_MAX; //type is double in the legacy java code
 
-                echo "<pre>".$this_race_key->track_name. "  ".$iterationStartFactor." ".$rangeAdjust." ".$startFactor." ".$endFactor." ".$bestFactor." ".$smallestDistanceBetweenRaces.' '.$distanceBetweenAllRaces. "</pre>";
+                //  "<pre>".$this_race_key->track_name. "  ".$iterationStartFactor." ".$rangeAdjust." ".$startFactor." ".$endFactor." ".$bestFactor." ".$smallestDistanceBetweenRaces.' '.$distanceBetweenAllRaces. "</pre>";
 
 
                 for ($tmpFactor = $startFactor; $tmpFactor <= $endFactor; $tmpFactor += $incrementSize) {
@@ -130,7 +130,7 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
             // The time saving is ~25% runtime when rating the UK for 2009-09-13.
 
             if ($distanceBetweenAllRaces < $smallestDistanceBetweenAllRaces && (($smallestDistanceBetweenAllRaces - $distanceBetweenAllRaces) > 0.0005)) {
-                echo "New smallest distance (incrementSize = " . $incrementSize . "): " . $distanceBetweenAllRaces;
+                // echo "New smallest distance (incrementSize = " . $incrementSize . "): " . $distanceBetweenAllRaces;
                 $smallestDistanceBetweenAllRaces = $distanceBetweenAllRaces;
             } else {
                 $distanceImproving = false;
@@ -140,7 +140,7 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
         // Reduce the increment size to tune the factor more finely in future iterations.
         $incrementSize *= RACE_RATINGS_INCREMENT_REDUCTION_FACTOR;
 
-        echo "<hr/>";
+        // echo "<hr/>";
     }
 
 }
