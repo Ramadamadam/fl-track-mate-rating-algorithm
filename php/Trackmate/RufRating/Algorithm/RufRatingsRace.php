@@ -4,12 +4,27 @@
 namespace Trackmate\RufRating\Algorithm;
 
 
+use Ds\Map;
+use Trackmate\RufRating\Model\RaceKey;
+
 class RufRatingsRace
 {
-    private int $id;
-    private string $fullRaceType;
-    private float $factor;
     private RaceKey $raceKey;
+    private ?string $fullRaceType = null;
+    private float $factor;
+
+    //horseName -> RufRatingsRunner
+    private Map $runners;
+
+    /**
+     * RufRatingsRace constructor.
+     * @param RaceKey $raceKey
+     */
+    public function __construct(RaceKey $raceKey)
+    {
+        $this->raceKey = $raceKey;
+        $this->runners = new Map();
+    }
 
 
     /**
@@ -18,15 +33,6 @@ class RufRatingsRace
     public function getRaceKey(): RaceKey
     {
         return $this->raceKey;
-    }
-
-    /**
-     * RufRatingsRace constructor.
-     * @param int $id
-     */
-    public function __construct(int $id)
-    {
-        $this->id = $id;
     }
 
 
@@ -49,7 +55,7 @@ class RufRatingsRace
     /**
      * @return string
      */
-    public function getFullRaceType(): string
+    public function getFullRaceType(): ?string
     {
         return $this->fullRaceType;
     }
@@ -57,7 +63,7 @@ class RufRatingsRace
     /**
      * @param string $fullRaceType
      */
-    public function setFullRaceType(string $fullRaceType): void
+    public function setFullRaceType(?string $fullRaceType)
     {
         $this->fullRaceType = $fullRaceType;
     }
@@ -79,14 +85,15 @@ class RufRatingsRace
     }
 
 
+    public function addRunner(RufRatingsRunner $rufRatingsRunner)
+    {
+        $this->runners->put($rufRatingsRunner->getHorseName(), $rufRatingsRunner);
+    }
 
-
-//    public void addRunner(IRunner runner) {
-//}
-//
-//    public Map<Long, RufRatingsRunner> getRunners() {
-//        return  null;
-//    }
+    public function getRunners(): Map
+    {
+        return $this->runners;
+    }
 
 
 }
