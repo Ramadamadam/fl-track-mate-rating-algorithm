@@ -31,7 +31,7 @@ function calculate_race_factors_for_all(RufRatingMiddleResult $ruf_rating_middle
 {
 
     //set the values as 1 at first
-    $all_race_set = RaceRunner::extractRacesAsSet($all_race_runners);
+    $all_race_set = RaceRunner::extractRaces($all_race_runners);
     foreach ($all_race_set as $race){
         $ruf_rating_middle_result -> putRaceFactor($race -> race_key, 1);
     }

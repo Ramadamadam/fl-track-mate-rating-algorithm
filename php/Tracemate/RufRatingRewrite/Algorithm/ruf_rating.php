@@ -46,25 +46,20 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
     $ruf_rating_middle_result->target_race = $target_race_runners[array_key_first($target_race_runners)]->race;
 
     //get horses of the target race
-    $horse_set = RaceRunner::extractHorsesAsSet($target_race_runners);
+    $horse_set = RaceRunner::extractHorses($target_race_runners);
 
 
     //get these horses' runners in the period
-    ////The java code's comment:  This will process the x days period up to and including yesterday (if processing ratings for tomorrow).
+    //The java code's comment:  This will process the x days period up to and including yesterday (if processing ratings for tomorrow).
     $end_date = date_sub($race_key->getRaceDateAsDateType(), DateInterval::createFromDateString("2 days"));
     $start_date = clone $end_date;
     date_sub($start_date, $race_dates_interval);
-    $history_races_runners_of_these_horses = $dataAccess->getRaceRunnersByHorsesBetween($start_date, $end_date, $horse_set->toArray());
-    $history_races = RaceRunner::extractRacesAsSet($history_races_runners_of_these_horses)->toArray();
-    ////filter races and runners by compatibility
-    $history_races = filter_compatible($history_races, $ruf_rating_middle_result->target_race);
-    $history_race_keys = array_map(fn($race) => $race ->race_key, $history_races);
-    $history_races_runners_of_these_horses = RaceRunner::filterByRaceKeys($history_races_runners_of_these_horses, $history_race_keys);
-    $history_race_runners = $dataAccess->getRaceRunnersByRaceKeys($history_race_keys);
+    $history_races_runners = $dataAccess->getRaceRunnersByHorsesBetween($start_date, $end_date, $horse_set->toArray());
+    $history_races_runners = filter_compatible($history_races_runners, $ruf_rating_middle_result->target_race);
 
 
     //calculate runner-factor for each runner
-    foreach ($history_races_runners_of_these_horses as $history_race_runner) {
+    foreach ($history_races_runners as $history_race_runner) {
         $runner_factor = get_runner_factor($history_race_runner);
         if (isset($runner_factor)) {
             $ruf_rating_middle_result->putRunnerFactor($history_race_runner->id, $runner_factor);
@@ -72,13 +67,13 @@ function get_ruf_ratings_for_race_next_day(RaceKey $race_key, DateInterval $race
     }
 
 
-    $race_runner_having_factors = RaceRunner::filterByRunnerIdSet($history_races_runners_of_these_horses, $ruf_rating_middle_result->getAllRunnerIdSet());
+    $race_runner_having_factors = RaceRunner::filterByRunnerIdSet($history_races_runners, $ruf_rating_middle_result->getAllRunnerIdSet());
 
 
     //Now calculate the race factors
     //create a related race matrix for race factor calculation
-    $related_race_matrix = get_related_races_matrix($history_races, $history_race_runners);
-    calculate_race_factors_for_all($ruf_rating_middle_result, $history_race_runners, $related_race_matrix);
+    $related_race_matrix = get_related_races_matrix($race_runner_having_factors);
+    calculate_race_factors_for_all($ruf_rating_middle_result, $race_runner_having_factors, $related_race_matrix);
 
     //convert middle result to final result
     $ruf_rating_final_result = new  RufRatingFinalResult();
@@ -145,19 +140,19 @@ function get_runner_factor(RaceRunner $race_runner): ?float
 /**
  * @return Map<RaceKey, RaceKey[]>
  */
-function get_related_races_matrix(array $history_races, $all_race_runners): Map
+function get_related_races_matrix(array $race_runners): Map
 {
 
-
+    $race_set = RaceRunner::extractRaces($race_runners);
 
     $result_map = new Map();
 
     //as you imagine, this will be a n*n calculation
-    foreach ($history_races as $this_race) {
+    foreach ($race_set as $this_race) {
 
         $related_race_keys_for_this_race = []; //type: RaceKey
 
-        foreach ($history_races as $that_race) {
+        foreach ($race_set as $that_race) {
             if ($this_race === $that_race) {
                 continue; //One is not related to itself
             }
@@ -165,8 +160,8 @@ function get_related_races_matrix(array $history_races, $all_race_runners): Map
                 continue;
             }
 
-            $this_race_horse_set = RaceRunner::extractHorsesAsSet(RaceRunner::filterByRaceKey($all_race_runners, $this_race->race_key));
-            $that_race_horse_set = RaceRunner::extractHorsesAsSet(RaceRunner::filterByRaceKey($all_race_runners, $that_race->race_key));
+            $this_race_horse_set = RaceRunner::extractHorses(RaceRunner::filterByRaceKey($race_runners, $this_race->race_key));
+            $that_race_horse_set = RaceRunner::extractHorses(RaceRunner::filterByRaceKey($race_runners, $that_race->race_key));
 
             if ($this_race_horse_set->intersect($that_race_horse_set)) { //if two races share a horse,  then they are related
                 array_push($related_race_keys_for_this_race, $that_race->race_key);
@@ -179,13 +174,13 @@ function get_related_races_matrix(array $history_races, $all_race_runners): Map
 
 
 /**
- * @param array|Race[] $races
+ * @param array|RaceRunner[] $race_runners
  * @param Race $target_race
  * @return array|RaceRunner[]
  */
-function filter_compatible(array $races, Race $target_race)
+function filter_compatible(array $race_runners, Race $target_race)
 {
-    return array_filter($races, fn($race) => are_races_compatible($race, $target_race));
+    return array_filter($race_runners, fn($race_runner) => are_races_compatible($race_runner->race, $target_race));
 }
 
 function are_races_compatible(Race $this_race, Race $that_race)

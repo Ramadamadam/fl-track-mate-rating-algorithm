@@ -13,25 +13,14 @@ require_once __DIR__ . '/RaceTableRecord.php';
 class RufRatingDataAccess
 {
 
-
     /**
-
+     * @param RaceKey $race_key
      * @return array | RaceRunner[]
      *
      */
     public function getRaceRunnersByRaceKey(RaceKey $race_key): array
     {
-        $raceRunners = $this->getRaceRunnersByRaceKeys([$race_key]);
-        return  $raceRunners;
-    }
-
-    /**
-     * @return array | RaceRunner[]
-     *
-     */
-    public function getRaceRunnersByRaceKeys(array $race_key): array
-    {
-        return RaceTableRecord::extractRaceRunners($this->getTableRecordsByRaceKeys($race_key));
+        return RaceTableRecord::extractRaceRunnersOfSingleRace($this->getTableRecordsByRaceKey($race_key));
     }
 
 
@@ -69,7 +58,7 @@ class RufRatingDataAccess
             $stmt->execute($params);
 
             $table_records =  $stmt->fetchAll(PDO::FETCH_CLASS, RaceTableRecord::class);
-            return RaceTableRecord::extractRaceRunners($table_records);
+            return RaceTableRecord::extractRaceRunnersOfSingleRace($table_records);
         } finally {
             $pdo = null;
         }
@@ -77,26 +66,29 @@ class RufRatingDataAccess
     }
 
     /**
-
+     * @param RaceKey $race_key
      * @return array|RaceTableRecord[]
      */
-    private function getTableRecordsByRaceKeys(array $race_keys): array
+    private function getTableRecordsByRaceKey(RaceKey $race_key): array
     {
 
         $pdo = null;
         try {
             $pdo = $this->getPdo();
-            $sql = "select * from ajr_trackmate_all where 1 = 0 ";
-            $params = [];
-
-            foreach ($race_keys as $race_key){
-                $sql = $sql." or (track_name = ? and race_date = ? and race_time = ?) ";
-                array_push($params, $race_key->track_name, $race_key->race_date, $race_key->race_time);
-            }
+            $sql = <<< EOD
+            select * from ajr_trackmate_all 
+                where track_name = ? 
+                and race_date = ?  
+                and race_time = ?;
+        EOD;
 
             $stmt = $pdo->prepare($sql);
 
-            $stmt->execute($params);
+            $stmt->execute([
+                $race_key->track_name,
+                $race_key->race_date,
+                $race_key->race_time
+            ]);
             return $stmt->fetchAll(PDO::FETCH_CLASS, RaceTableRecord::class);
 
         } finally {
