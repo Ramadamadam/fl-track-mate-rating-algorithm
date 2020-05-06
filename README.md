@@ -44,12 +44,9 @@ php -S localhost:8000
 
 ## Integrate this project's code into race card system
 
-Note: **Don't do the integration until testing is all done**, which may last a few days. Otherwise when you want any change in this project,
-* it will be very difficult for Jian to do it in your code
-* Jian can also do it here, let you do the integration again. The integration will be difficult
-
 Steps:
 
+* Step 0:  Implement function are_races_compatible() in ruf_rating.php
 * Copy all code under php/Tracemate/RufRatingRewrite to your system, with directory structure and namespaces unchanged
 * Deal with RufRatingDataAccess.php
   * It's using PDO.  You can rewrite it with $wpdb
