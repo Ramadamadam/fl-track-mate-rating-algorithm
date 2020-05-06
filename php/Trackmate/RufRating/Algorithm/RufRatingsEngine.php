@@ -8,6 +8,7 @@ require_once __DIR__ . '/../DataAccess/RufRatingDataAccess.php';
 
 use DateInterval;
 use DateTime;
+use Ds\Map;
 use Trackmate\RufRating\DataAccess\RufRatingDataAccess;
 use Trackmate\RufRating\Model\IRunner;
 
@@ -20,8 +21,9 @@ class RufRatingsEngine
      *
      *
      * @param DateInterval $raceDatesInterval such as "5 months" or "100 days"
+     * @param debug if true, echo debug information on page
      */
-    public function processRacesForDate(DateTime $raceDate, DateInterval $raceDatesInterval)
+    public function processRacesForDate(DateTime $raceDate, DateInterval $raceDatesInterval, bool $debug)
     {
         // This will process the x month period up to and including yesterday (if processing ratings for tomorrow).
 
@@ -34,11 +36,14 @@ class RufRatingsEngine
         $periodRunners = $dataAccess->getRunnersBetween($periodStartDate, $periodEndDate);
         $periodRaces = IRunner::extractRacesAsSet($periodRunners)->toArray();
 
-        echo "Found " . count($periodRaces) . " Races to process between " . $periodStartDate->format('Y-m-d') . " and " . $periodEndDate->format('Y-m-d') . ".";
+        if($debug){
+            echo "Found " . count($periodRaces) . " Races to process between " . $periodStartDate->format('Y-m-d') . " and " . $periodEndDate->format('Y-m-d') . ".";
+        }
+
 
         // Get the runner factors and RufRatingsRaces.
-//    Map<Long, Double> runnerFactors = new HashMap<Long, Double>(); //Jian: key = runnerId
-//    Map<Long, RufRatingsRace> ratingsRaces = new HashMap<Long, RufRatingsRace>();
+        $runnerFactors = new Map();  //runner id -> float value
+        $ratingsRaces = new Map(); // Long, RufRatingsRace // race key -> RufRatingsRace
 //    getRunnerFactorsAndRatingsRaces(periodRaces, runnerFactors, ratingsRaces, racingService);
 //
 //    //////

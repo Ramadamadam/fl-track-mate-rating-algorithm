@@ -16,6 +16,6 @@ $rufRatingEngine = new RufRatingsEngine();
 
 $raceDate = DateTime::createFromFormat('Y-m-d', '2018-12-02');
 $raceDatesInterval = DateInterval::createFromDateString('1 day');
-$rufRatingEngine->processRacesForDate($raceDate, $raceDatesInterval);
+$rufRatingEngine->processRacesForDate($raceDate, $raceDatesInterval, true);
 
 ?>
