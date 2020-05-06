@@ -17,6 +17,15 @@ use Trackmate\RufRating\Model\IRace;
 use Trackmate\RufRating\Model\IRunner;
 
 
+/** The number of iterative refinements performed when calculating race factors. */
+define("RACE_RATINGS_NUM_ITERATIONS", 5);
+/** The initial increment tick when calculating the race ratings. */
+define("RACE_RATINGS_START_INCREMENT_SIZE", 0.25);
+/** The multiplier for the race factor increment tick for each iteration. */
+define("RACE_RATINGS_INCREMENT_REDUCTION_FACTOR", 0.1);
+/** The multiplier which when combined with the increment tick dictates the range of permutations of the race factor per generation. */
+define("RACE_RATINGS_INCREMENT_MULTIPLIER", 2);
+
 class RufRatingsEngine
 {
 
@@ -52,10 +61,10 @@ class RufRatingsEngine
         $this->getRunnerFactorsAndRatingsRaces($periodRaces, $periodRunners, $runnerFactors, $ratingsRaces);
 
         if ($debug) {
-            echo "<p>The runner factors are: </p>";
-            echo "<pre>";
-            var_dump($runnerFactors);
-            echo "</pre>";
+            echo "<p>The runner factors are calculated </p>";
+//            echo "<pre>";
+//            var_dump($runnerFactors);
+//            echo "</pre>";
         }
 
         // Build up all related races.
@@ -66,21 +75,19 @@ class RufRatingsEngine
         $this->getRelatedRaces($ratingsRaces, $relatedRaceKeys, $horseRaceRatings);
 
 
+        //////
+        // Calculate the RaceFactors
+        //////
+        if ($debug) {
+            echo "Calculating race factors for " . count($ratingsRaces) . " Races.";
+        }
+        $this->calculateRaceFactors($ratingsRaces, $relatedRaceKeys, $debug);
 
-//    //////
-//    // Calculate the RaceFactors
-//    //////
-//    if (debug) {
-//        logger.debug("Calculating race factors for " + ratingsRaces.size() + " Races.");
-//    }
-//    calculateRaceFactors(ratingsRaces, relatedRaceIds, debug);
-//    logger.info("Race factor calculation complete (100%)");
-//
-//
-//    if (debug) {
-//        logger.debug("Calculating final ratings for " + racesForDate.size() + " Races (Meeting " + marketId + ", Date: " +
-//            raceDate + ").");
-//    }
+        if ($debug) {
+            echo "Race factor calculation complete (100%)";
+        }
+
+
 //
 //    //////
 //    // Store the ratings.
@@ -224,6 +231,109 @@ class RufRatingsEngine
             }
         }
 
+    }
+
+
+    /**
+     * Calculate the Race factors for each Race in the period.
+     * @param $ratingsRaces The Map of RudRatingsRace, keyed on Race Key.  //Jian: both input and output
+     * @param $relatedRatingRaceMap The Map of Collections of related Race Key, keyed on Race Key.
+     * @param $debug
+     */
+    private function calculateRaceFactors(Map $ratingsRaces, Map $relatedRatingRaceMap, bool $debug)
+    {
+
+        $incrementSize = RACE_RATINGS_START_INCREMENT_SIZE;
+        for ($iteration = 0; $iteration < RACE_RATINGS_NUM_ITERATIONS; $iteration++) {
+            if ($debug) {
+                echo "<pre>Race factor calculation iteration " . ($iteration + 1) . " / " . RACE_RATINGS_NUM_ITERATIONS . "</pre>";
+            }
+
+            // While overall difference is reducing, continue this iteration.
+            $smallestDistanceBetweenAllRaces = PHP_FLOAT_MAX;
+            $distanceImproving = true;
+            while ($distanceImproving) {
+                $distanceBetweenAllRaces = 0;
+                /** @var  $ratingsRace RufRatingsRace */
+                foreach ($ratingsRaces->values() as $ratingsRace) {
+                    $ratingsRaceType = $ratingsRace->getFullRaceType();
+                    $iterationStartFactor = $ratingsRace->getFactor();
+                    $rangeAdjust = RACE_RATINGS_INCREMENT_MULTIPLIER * $incrementSize;
+                    $startFactor = $iterationStartFactor - $rangeAdjust;
+                    $endFactor = $iterationStartFactor + $rangeAdjust;
+                    $bestFactor = $iterationStartFactor;
+                    $smallestDistanceBetweenRaces = PHP_FLOAT_MAX;
+                    for ($tmpFactor = $startFactor; $tmpFactor <= $endFactor; $tmpFactor += $incrementSize) {
+                        $distanceBetweenRaces = 0;
+                        /** @var  $relatedRaceKeys array */
+                        $relatedRaceKeys = $relatedRatingRaceMap->get($ratingsRace->getRaceKey());
+                        if ($relatedRaceKeys == null) {
+                            continue;
+                        }
+                        foreach ($relatedRaceKeys as $relatedRaceKey) {
+                            if ($relatedRaceKey->equals($ratingsRace->getRaceKey())) {
+                                continue;
+                            }
+                            /** @var  $relatedRace  RufRatingsRace */
+                            $relatedRace = $ratingsRaces->get($relatedRaceKey);
+
+                            // Check that this is a compatible race type.
+                            $relatedRaceType = $relatedRace->getFullRaceType();
+                            if (!$this->isCompatibleRaceType($ratingsRaceType, $relatedRaceType)) {
+                                continue;
+                            }
+
+                            /** @var  $runnersOfOneRace map , value type RufRatingsRunner */
+                            $runnersOfOneRace = $ratingsRace->getRunners();
+                            foreach ($runnersOfOneRace->pairs() as $ratingsRunnerEntry) {
+                                $horseName = $ratingsRunnerEntry->getKey();
+                                /** @var  $ratingsRunner RufRatingsRunner */
+                                $ratingsRunner = $ratingsRunnerEntry->getValue();
+
+                                /** @var  $relatedRunner RufRatingsRunner */
+                                $relatedRunner = $relatedRace->getRunner($horseName);
+                                if ($relatedRunner != null) {
+                                    $runnerRating = $ratingsRunner->getRating() * $tmpFactor;
+                                    $relatedRunnerRating = $relatedRunner->getRating() * $relatedRace->getFactor();
+                                    $distanceBetweenRunners = abs($runnerRating - $relatedRunnerRating);
+                                    $distanceBetweenRaces += $distanceBetweenRunners;
+                                }
+                            }
+                        }
+
+                        // If this is the best yet then note it.
+                        if ($distanceBetweenRaces < $smallestDistanceBetweenRaces) {
+                            $smallestDistanceBetweenRaces = $distanceBetweenRaces;
+                            $bestFactor = $tmpFactor;
+                        }
+                    }
+
+                    $ratingsRace->setFactor($bestFactor);
+                    if ($smallestDistanceBetweenRaces != PHP_FLOAT_MAX) {
+                        $distanceBetweenAllRaces += $smallestDistanceBetweenRaces;
+                    }
+                }
+
+                // Don't allow this to go on forever. If the improvement is negligeable, then carry on.
+                // Not having this check resulted in hugely bloated running times for some periods of HK data (e.g. 2009-04-05).
+                // GDS 2009-09-16: This has been profiled for 2009-09-13 in the UK and is observed at 2bn iterations before the profiler lost count. Reduce limit.
+//            if (distanceBetweenAllRaces < smallestDistanceBetweenAllRaces && ((smallestDistanceBetweenAllRaces - distanceBetweenAllRaces) > 0.0000000001)) {
+                // if the sum of the distance between *all* races improves by less than 1/2000 we can assume that this is close enough. The difference between this
+                // limit and letting it run to the previous limit has been observed at 0.00001 in about 1 in 50 ratings; no ranking differences have been observed.
+                // The time saving is ~25% runtime when rating the UK for 2009-09-13.
+                if ($distanceBetweenAllRaces < $smallestDistanceBetweenAllRaces && (($smallestDistanceBetweenAllRaces - $distanceBetweenAllRaces) > 0.0005)) {
+                    if ($debug) {
+                        echo "<pre> New smallest distance (incrementSize = " . $incrementSize . "): " . $distanceBetweenAllRaces . "</pre>";
+                    }
+                    $smallestDistanceBetweenAllRaces = $distanceBetweenAllRaces;
+                } else {
+                    $distanceImproving = false;
+                }
+            }
+
+            // Reduce the increment size to tune the factor more finely in future iterations.
+            $incrementSize *= RACE_RATINGS_INCREMENT_REDUCTION_FACTOR;
+        }
     }
 
 
