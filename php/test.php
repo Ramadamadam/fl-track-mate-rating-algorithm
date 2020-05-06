@@ -10,6 +10,7 @@ use function Trackmate\RufRatingRewrite\Algorithm\get_ruf_ratings_for_race_next_
 <h2>This the test page</h2>
 
 
+
 <?php
 
 $race_key = new RaceKey();
@@ -50,6 +51,8 @@ $result_entries = $ruf_rating_final_result->entries->values(); //type is DS\Sequ
 
         <td>Horse Name</td>
         <td>Race</td>
+        <td>Place</td>
+        <td>Total Beaten Lengths</td>
         <td>Runner Factor</td>
         <td>Race Factor</td>
         <td>Ruf Rating</td>
@@ -60,7 +63,9 @@ $result_entries = $ruf_rating_final_result->entries->values(); //type is DS\Sequ
                 echo <<<EOT
         		<tr>       
         		            <td>  {$entry->race_runner->horse->horse_name} </td>
-        		            <td>  {$entry->race_runner->race->race_key},  {$entry->race_runner->race->race_distance_adjusted_in_yards} yards</td>
+        		            <td>  {$entry->race_runner->race->race_key},  {$entry->race_runner->race->race_distance_adjusted_in_yards} yards, {$entry->race_runner->race->number_of_runners} runners</td>
+        		            <td>  {$entry->race_runner->place} </td>
+        		            <td>  {$entry->race_runner->total_distance_beat} </td>
         		            <td>  {$entry->runner_factor} </td>
         		            <td>  {$entry->race_factor} </td>
         		            <td>  {$entry->rating} </td>

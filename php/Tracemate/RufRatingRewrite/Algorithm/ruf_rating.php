@@ -111,6 +111,24 @@ function get_runner_factor(RaceRunner $race_runner): ?float
         return null;
     }
 
+    if($race_runner->total_distance_beat >= 20){ //if you lose by 20, the runner is included
+        return null;
+    }
+
+    if(!$race_runner->race->is_more_than_one_runner()){
+        return null;
+    }
+
+
+//ns - nose, .03 of a length
+//sh - short head, .06 of a length
+//hd - head, 0.1 of a length
+//nk - neck, .25 of a length
+
+    //todo: total distance probelm:
+
+
+
     $feet_per_length = 8;
     $feet_per_yards = 3;
 

@@ -314,10 +314,9 @@ class RaceTableRecord
 
 
     /**
-
      * @return RaceRunner
      */
-    public  function toRaceRunner(): RaceRunner
+    public function toRaceRunner(): RaceRunner
     {
         $raceRunner = new RaceRunner();
         $raceRunner->id = $this->id;
@@ -327,7 +326,7 @@ class RaceTableRecord
         $raceRunner->placing_numerical = $this->placing_numerical;
         $raceRunner->place = $this->place;
 
-        $raceRunner->total_distance_beat = $this->total_distance_beat;
+        $raceRunner->total_distance_beat = $this->to_real_total_distance_beat($this->distance_beat, $this->total_distance_beat);
         return $raceRunner;
     }
 
@@ -346,8 +345,6 @@ class RaceTableRecord
     }
 
 
-
-
     private function toRace(): Race
     {
         $race = new Race();
@@ -355,10 +352,35 @@ class RaceTableRecord
         $race->race_type = $this->race_type;
         $race->race_name = $this->race_name;
         $race->race_class = $this->race_class;
+        $race->number_of_runners = $this->number_of_runners;
         $race->race_distance_adjusted_in_yards = $this->yards + $this->rail_move;
         return $race;
     }
 
+    private function to_real_total_distance_beat( ?string $distance_beat, ?float $total_distance_beat)
+    {
+        if($total_distance_beat == 0 && !empty($distance_beat)){
+            //the string values are worked out by sql:  select distinct distance_beat from ajr_trackmate_all where distance_beat regexp  '^[^0-9]';
+            if ($distance_beat === 'HD') {
+                return 0.1;
+            }
+            if ($distance_beat === 'SH') {
+                return 0.06;
+            }
+            if ($distance_beat === 'NK') {
+                return 0.25;
+            }
+            if ($distance_beat === 'NSE') {
+                return 0.03;
+            }
+            if ($distance_beat === 'DH') {
+                return 0;
+            }
+            return 0; //none of them? It's just bad data. Make it 0;
+        }
+
+        return $total_distance_beat;
+    }
 
     private function toRaceKey(): RaceKey
     {
@@ -372,7 +394,7 @@ class RaceTableRecord
     private function toHorse()
     {
         $horse = new Horse();
-        $horse -> horse_name = $this -> horse_name;
+        $horse->horse_name = $this->horse_name;
         return $horse;
     }
 

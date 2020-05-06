@@ -51,6 +51,7 @@ class Race implements Hashable
     public ?string $race_type = null;
     public ?string $race_name = null;
     public ?string $race_class = null;
+    public ?int $number_of_runners = null;
 
     public ?int $race_distance_adjusted_in_yards = null;
 
@@ -62,6 +63,11 @@ class Race implements Hashable
     function equals($obj): bool
     {
         return $this->race_key->equals($obj->race_key);
+    }
+
+    public function is_more_than_one_runner()
+    {
+        return $this->number_of_runners > 1;
     }
 }
 
@@ -98,6 +104,7 @@ class RaceRunner implements Hashable
     public ?int $placing_numerical = null;
     public ?string $place = null;
 
+    //not exactly the same with the value in the table
     public ?float $total_distance_beat = null;
 
     public static function extractHorses(array $race_runners): Set
