@@ -11,7 +11,7 @@ class RufRatingsRace
 {
     private RaceKey $raceKey;
     private ?string $fullRaceType = null;
-    private float $factor = 1;
+    private float $factor = 2;
 
     //horseName -> RufRatingsRunner
     private Map $runners;
