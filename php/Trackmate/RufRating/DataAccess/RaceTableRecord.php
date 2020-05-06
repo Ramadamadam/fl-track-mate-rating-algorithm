@@ -2,13 +2,12 @@
 
 namespace Trackmate\RufRatingRewrite\DataAccess;
 
-
 require_once __DIR__ . '/../Model/Models.php';
 
-use Trackmate\RufRatingRewrite\Model\Horse;
-use Trackmate\RufRatingRewrite\Model\Race;
-use Trackmate\RufRatingRewrite\Model\RaceKey;
-use Trackmate\RufRatingRewrite\Model\RaceRunner;
+use Trackmate\RufRating\Model\IHorse;
+use Trackmate\RufRating\Model\IRace;
+use Trackmate\RufRating\Model\IRunner;
+use Trackmate\RufRating\Model\RaceKey;
 
 /**
  *
@@ -314,11 +313,11 @@ class RaceTableRecord
 
 
     /**
-     * @return RaceRunner
+     * @return IRunner
      */
-    public function toRaceRunner(): RaceRunner
+    public function toRaceRunner(): IRunner
     {
-        $raceRunner = new RaceRunner();
+        $raceRunner = new IRunner();
         $raceRunner->id = $this->id;
         $raceRunner->horse = $this->toHorse();
         $raceRunner->race = $this->toRace();
@@ -333,9 +332,9 @@ class RaceTableRecord
     /**
      * Extract runner recorders
      * @param array $table_records
-     * @return array|RaceRunner[]
+     * @return array|IRunner[]
      */
-    public static function extractRaceRunners(array $table_records): array
+    public static function extractRunners(array $table_records): array
     {
         $raceRunners = array_map(function (RaceTableRecord $table_record) {
             return $table_record->toRaceRunner();
@@ -345,9 +344,9 @@ class RaceTableRecord
     }
 
 
-    private function toRace(): Race
+    private function toRace(): IRace
     {
-        $race = new Race();
+        $race = new IRace();
         $race->race_key = $this->toRaceKey();
         $race->race_type = $this->race_type;
         $race->race_name = $this->race_name;
@@ -357,9 +356,9 @@ class RaceTableRecord
         return $race;
     }
 
-    private function to_real_total_distance_beat( ?string $distance_beat, ?float $total_distance_beat)
+    private function to_real_total_distance_beat(?string $distance_beat, ?float $total_distance_beat)
     {
-        if($total_distance_beat == 0 && !empty($distance_beat)){
+        if ($total_distance_beat == 0 && !empty($distance_beat)) {
             //the string values are worked out by sql:  select distinct distance_beat from ajr_trackmate_all where distance_beat regexp  '^[^0-9]';
             if ($distance_beat === 'HD') {
                 return 0.1;
@@ -393,7 +392,7 @@ class RaceTableRecord
 
     private function toHorse()
     {
-        $horse = new Horse();
+        $horse = new IHorse();
         $horse->horse_name = $this->horse_name;
         return $horse;
     }

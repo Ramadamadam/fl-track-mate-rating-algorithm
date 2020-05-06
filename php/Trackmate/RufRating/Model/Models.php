@@ -1,6 +1,6 @@
 <?php
 
-namespace Trackmate\RufRatingRewrite\Model;
+namespace Trackmate\RufRating\Model;
 require __DIR__ . '/../../../vendor/autoload.php';
 
 use DateTime;
@@ -45,7 +45,7 @@ class RaceKey implements Hashable
     }
 }
 
-class Race implements Hashable
+class IRace implements Hashable
 {
     public RaceKey $race_key;
     public ?string $race_type = null;
@@ -72,7 +72,7 @@ class Race implements Hashable
 }
 
 
-class Horse implements Hashable
+class IHorse implements Hashable
 {
     public string $horse_name;  //the key
 
@@ -91,15 +91,15 @@ class Horse implements Hashable
  * A combination of horse + race + other informatin.  This is a rich domain model, meaning it uses other domain models as its members
  * @package Trackmate\RufRatingRewrite\Model
  */
-class RaceRunner implements Hashable
+class IRunner implements Hashable
 {
     /**
      * @var int The same as in the table
      */
     public int $id;
 
-    public Horse $horse;
-    public Race $race;
+    public IHorse $horse;
+    public IRace $race;
 
     public ?int $placing_numerical = null;
     public ?string $place = null;
