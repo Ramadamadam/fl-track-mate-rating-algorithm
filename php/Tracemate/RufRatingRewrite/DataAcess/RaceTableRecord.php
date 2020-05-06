@@ -332,14 +332,14 @@ class RaceTableRecord
 
     /**
      * Extract runner recorders
-     * @param array $single_race_table_records
+     * @param array $table_records
      * @return array|RaceRunner[]
      */
-    public static function extractRaceRunnersOfSingleRace(array $single_race_table_records): array
+    public static function extractRaceRunners(array $table_records): array
     {
         $raceRunners = array_map(function (RaceTableRecord $table_record) {
             return $table_record->toRaceRunner();
-        }, $single_race_table_records);
+        }, $table_records);
 
         return $raceRunners;
     }

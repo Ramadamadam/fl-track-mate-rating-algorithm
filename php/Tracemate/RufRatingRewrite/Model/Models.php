@@ -107,13 +107,13 @@ class RaceRunner implements Hashable
     //not exactly the same with the value in the table
     public ?float $total_distance_beat = null;
 
-    public static function extractHorses(array $race_runners): Set
+    public static function extractHorsesAsSet(array $race_runners): Set
     {
         $horse_array = array_map(fn($runner) => $runner->horse, $race_runners);
         return new Set($horse_array);
     }
 
-    public static function extractRaces(array $race_runners): Set
+    public static function extractRacesAsSet(array $race_runners): Set
     {
         $race_array = array_map(fn($runner) => $runner->race, $race_runners);
         return new Set($race_array);
@@ -122,6 +122,11 @@ class RaceRunner implements Hashable
     public static function filterByRaceKey(array $race_runners, RaceKey $race_key): array
     {
         return array_filter($race_runners, fn($runner) => $runner->race->race_key->equals($race_key));
+    }
+
+    public static function filterByRaceKeys(array $race_runners, array $race_keys): array
+    {
+        return array_filter($race_runners, fn($runner) => in_array($runner->race->race_key, $race_keys));
     }
 
     public static function filterByRunnerIdSet(array $race_runners, Set $runner_id_set)
